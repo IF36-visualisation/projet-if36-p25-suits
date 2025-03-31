@@ -24,8 +24,67 @@ Dans la suite de cette introduction, nous détaillerons les différentes dimensi
 
 ## 📊 DONNEES
 
-### 📁 FICHIER 1: base_etablissement_par_tranche_effectif.csv
-Patrice
+### 📁 FICHIER 1 : `base_etablissement_par_tranche_effectif.csv`
+
+Ce fichier contient les données relatives au **nombre d'établissements (entreprises ou structures économiques)** présents dans chaque commune, classés par **tranche d’effectif salarié**. Chaque ligne représente une **commune unique**, identifiée par son code INSEE.
+
+Nous avons choisi ce fichier car il constitue un **indicateur direct de l’activité économique locale**. Il permet notamment d’analyser la **présence de TPE, PME et grandes entreprises**, ce qui est un levier d’explication crucial pour les écarts de salaires, la répartition de la population active, et l’attractivité territoriale.
+
+---
+
+#### 📐 1. Format et structure
+
+- **Format** : CSV  
+- **Encodage** : UTF-8  
+- **Nombre de lignes** : environ 35 000 (une par commune)  
+- **Nombre de colonnes** : 14  
+- **Clé de jointure** : `CODGEO`, commune à tous les autres fichiers
+
+---
+
+#### 🏷️ 2. Description des variables
+
+| **Nom**        | **Type**    | **Description** |
+|----------------|-------------|-----------------|
+| `CODGEO`       | Nominale    | Code INSEE unique de la commune. Utilisé comme clé de jointure. |
+| `LIBGEO`       | Nominale    | Nom de la commune. Sert à la lisibilité dans les visuels. |
+| `REG`          | Ordinale    | Code de la région (2 chiffres). Sert à regrouper les communes par région. |
+| `DEP`          | Ordinale    | Code du département. Permet une agrégation intermédiaire. |
+| `E14TST`       | Numérique   | Nombre total d'établissements dans la commune. |
+| `E14TS0ND`     | Numérique   | Établissements sans effectif connu ou non déterminé. |
+| `E14TS1`       | Numérique   | Établissements de 1 à 5 salariés (**TPE**). |
+| `E14TS6`       | Numérique   | Établissements de 6 à 9 salariés. |
+| `E14TS10`      | Numérique   | Établissements de 10 à 19 salariés. |
+| `E14TS20`      | Numérique   | Établissements de 20 à 49 salariés (**PME**). |
+| `E14TS50`      | Numérique   | Établissements de 50 à 99 salariés. |
+| `E14TS100`     | Numérique   | Établissements de 100 à 199 salariés. |
+| `E14TS200`     | Numérique   | Établissements de 200 à 499 salariés. |
+| `E14TS500`     | Numérique   | Établissements de 500 salariés et plus. |
+
+---
+
+#### 🧠 3. Catégorisation implicite
+
+Les tranches d’effectifs peuvent être regroupées en **sous-catégories analytiques** :
+
+- **TPE (Très Petites Entreprises)** : `E14TS1` + `E14TS6`  
+- **PME (Petites et Moyennes Entreprises)** : `E14TS10` + `E14TS20` + `E14TS50`  
+- **Grandes entreprises** : `E14TS100` + `E14TS200` + `E14TS500`  
+
+Cela permet de **profiler chaque commune** selon la structure dominante de ses établissements économiques. Ce regroupement est utile pour la segmentation, le clustering, ou les corrélations avec d'autres indicateurs (salaires, population...).
+
+---
+
+#### 🔗 4. Intégration dans notre modèle
+
+Le fichier s’intègre dans un **modèle de données relationnel**, en étant relié :
+
+- Aux **données géographiques** via le fichier `name_geographic_information.csv` (clé : `CODGEO`)  
+- Aux **données salariales** via `net_salary_per_town_per_category.csv`  
+- À la **démographie locale** via `population.csv`
+
+Ce fichier constitue ainsi un **pilier du modèle**, apportant un indicateur structurel essentiel sur la **vitalité économique des territoires**, et servant de point d’entrée pour explorer les **corrélations entre richesse locale, tissu économique, salaires et démographie**.
+
 ### 📁 FICHIER 2: name_geographic_information.csv
 Dora
 
