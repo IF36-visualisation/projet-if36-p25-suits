@@ -1,4 +1,26 @@
+# 📊 Analyse des inégalités en France : Emploi, Salaires et Démographie  
+
 # INTRODUCTION
+
+Dans le cadre de notre projet de dataViz, notre équipe **Suits** a choisi d'explorer les données socio-économiques françaises afin de mettre en lumière les inégalités en matière d'emploi, de salaires et de de démographie. Notre objectif est d'offrir une analyse approfondie des disparités entre les différentes villes françaises en nous basant sur des données officielles fournies par **l'INSEE** (Institut National de la Statistique et des Etudes économiques). 
+Notre étude reposera sur **quatre fichiers de données**, chacun apportant un éclairage spécifique sur les disparités observées en France : 
+
+| 📁 **Nom du fichier**                           | 📌 **Description** |
+|---------------------------------------------|------------------|
+| **base_etablissement_par_tranche_effectif.csv** | Contient le nombre d’entreprises par commune française, classées selon leur taille. Permet d’analyser la répartition des entreprises sur le territoire. |
+| **name_geographic_information.csv**         | Fournit des informations géographiques détaillées sur chaque ville (latitude, longitude, codes et noms des régions et départements). |
+| **net_salary_per_town_per_category.csv**    | Présente les niveaux de salaires selon la ville, la catégorie professionnelle, l’âge et le sexe. Permet d'évaluer les **inégalités salariales** en France. |
+| **population.csv**                           | Contient des données démographiques par commune, incluant l’âge, le sexe et le mode de vie des habitants. |
+
+En croisant ce différentes sources de données, nous visons à : 
+
+✅ Identifier les inégalités économiques et démographiques entre les territoires français.  
+✅ Analyser la répartition des entreprises et son impact sur l'emploi et les salaires.  
+✅ Mettre en évidence les écarts salariaux en fonction de l’âge, du sexe et de la catégorie professionnelle.  
+✅ Avoir une vision claire de ce qui se passe dans les différentes régions pour mieux comprendre les problèmes liés aux inégalités entre les territoires.
+
+Dans la suite de cette introduction, nous détaillerons les différentes dimensions contenues dans nos quatre fichiers de données et présenterons notre plan d'analyse.
+
 
 ## DONNEES
 
@@ -6,8 +28,60 @@
 Patrice
 ### FICHIER 2: name_geographic_information.csv
 Dora
+
 ### FICHIER 3: net_salary_per_town_per_category.csv
-Patricia
+
+Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'évaluer les écarts de rénumération à plusieurs niveaux (géographique, professionnel et démographique).Il nous permettra donc de comprendre la répartition des revenus et détecter d'éventuelles inégalités salariales.
+
+---
+
+#### 📊 Caractéristiques des données  
+
+- **Nombre d’observations** : plus de 1000000  
+- **Nombre de variables** : 26  
+- **Format** : **CSV** 
+- **Type des variables** :  
+  - **Identifiants et localisation** : Codes et noms des villes (**variables qualitatives**).  
+  - **Données numériques** : Salaires en milliers d'euros (**variables quantitatives continues**).  
+
+---
+
+#### Présentation de chaque variable
+
+| 🏷️ **Nom de la variable** | 📌 **Description** | 🎭 **Type** |
+|---------------------------|--------------------|------------|
+| **CODGEO**  | Code unique de la ville | Qualitative (Nominal) |
+| **LIBGEO**  | Nom de la ville | Qualitative (Nominal) |
+| **SNHM14**  | 🔹 Salaire net moyen | Quantitative continue |
+| **SNHMC14** | 🔹 Salaire net moyen par heure pour les cadres | Quantitative continue |
+| **SNHMP14** | 🔹 Salaire net moyen par heure pour les professions intermédiaires | Quantitative continue |
+| **SNHME14** | 🔹 Salaire net moyen par heure pour les employés | Quantitative continue |
+| **SNHMO14** | 🔹 Salaire net moyen par heure pour les ouvriers | Quantitative continue |
+| **SNHMF14** | 🔹 Salaire net moyen des femmes | Quantitative continue |
+| **SNHMFC14** | 🔹 Salaire net moyen par heure pour les femmes cadres | Quantitative continue |
+| **SNHMFP14** | 🔹 Salaire net moyen par heure pour les femmes professions intermédiaires | Quantitative continue |
+| **SNHMFE14** | 🔹 Salaire net moyen par heure pour les femmes employées | Quantitative continue |
+| **SNHMFO14** | 🔹 Salaire net moyen par heure pour les femmes ouvrières | Quantitative continue |
+| **SNHMH14** | 🔹 Salaire net moyen des hommes | Quantitative continue |
+| **SNHMHC14** | 🔹 Salaire net moyen par heure pour les hommes cadres | Quantitative continue |
+| **SNHMHP14** | 🔹 Salaire net moyen par heure pour les hommes professions intermédiaires | Quantitative continue |
+| **SNHMHE14** | 🔹 Salaire net moyen par heure pour les hommes employés | Quantitative continue |
+| **SNHMHO14** | 🔹 Salaire net moyen par heure pour les hommes ouvriers | Quantitative continue |
+| **SNHM1814** | 🔹 Salaire net moyen par heure pour les 18-25 ans | Quantitative continue |
+| **SNHM2614** | 🔹 Salaire net moyen par heure pour les 26-50 ans | Quantitative continue |
+| **SNHM5014** | 🔹 Salaire net moyen par heure pour les plus de 50 ans | Quantitative continue |
+| **SNHMF1814** | 🔹 Salaire net moyen par heure pour les femmes de 18-25 ans | Quantitative continue |
+| **SNHMF2614** | 🔹 Salaire net moyen par heure pour les femmes de 26-50 ans | Quantitative continue |
+| **SNHMF5014** | 🔹 Salaire net moyen par heure pour les femmes de plus de 50 ans | Quantitative continue |
+| **SNHMH1814** | 🔹 Salaire net moyen par heure pour les hommes de 18-25 ans | Quantitative continue |
+| **SNHMH2614** | 🔹 Salaire net moyen par heure pour les hommes de 26-50 ans | Quantitative continue |
+| **SNHMH5014** | 🔹 Salaire net moyen par heure pour les hommes de plus de 50 ans | Quantitative continue |
+
+---
+
+
+
+
 ### FICHIER 4: population.csv
 Samella
 
