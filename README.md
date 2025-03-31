@@ -86,9 +86,28 @@ Le fichier s’intègre dans un **modèle de données relationnel**, en étant r
 Ce fichier constitue ainsi un **pilier du modèle**, apportant un indicateur structurel essentiel sur la **vitalité économique des territoires**, et servant de point d’entrée pour explorer les **corrélations entre richesse locale, tissu économique, salaires et démographie**.
 
 ### 📁 FICHIER 2: name_geographic_information.csv
-Dora
 
----
+ce fichier contient des informations géographiques et administratives sur les circonscriptions françaises, avec les variables suivantes :
+
+| **Nom de la variable**                  | **Description** | **Type** |
+|----------------------------|----------------|---------------------|
+| Circonscription française  | Nom ou code de la circonscription électorale. | Texte |
+| Code région               | Code numérique associé à chaque région. | Entier |
+| Nom de la région          | Nom officiel de la région. | Texte |
+| Chef-lieu de la région    | Ville principale de la région. | Texte |
+| Numéro du département     | Code départemental (ex. 75 pour Paris). | Entier |
+| Nom du département        | Nom du département. | Texte |
+| Préfecture               | Ville où se trouve la préfecture du département. | Texte |
+| Numéro de circonscription | Identifiant numérique de la circonscription électorale. | Entier |
+| Nom de la commune        | Nom de la ville ou du village. | Texte |
+| Codes postaux            | Liste ou valeur unique du code postal de la commune. | Texte|
+| CODGEO                   | Code géographique unique pour identifier une commune. | Texte |
+| Latitude & Longitude     | Coordonnées GPS de la commune. | Flottant (2 valeurs) |
+| Indice d’éloignement     | Mesure de distance par rapport à un centre administratif ou une grande ville. | Flottant |
+
+
+Provenance des données : Ces informations proviennent de l’INSEE
+Format : csv.
 
 ### 📁 FICHIER 3: net_salary_per_town_per_category.csv
 
