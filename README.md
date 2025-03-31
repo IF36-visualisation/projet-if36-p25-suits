@@ -1,11 +1,11 @@
-# 📊 Analyse des inégalités en France : Emploi, Salaires et Démographie  
+# Analyse des inégalités en France : Emploi, Salaires et Démographie  
 
 # INTRODUCTION
 
 Dans le cadre de notre projet de dataViz, notre équipe **Suits** a choisi d'explorer les données socio-économiques françaises afin de mettre en lumière les inégalités en matière d'emploi, de salaires et de de démographie. Notre objectif est d'offrir une analyse approfondie des disparités entre les différentes villes françaises en nous basant sur des données officielles fournies par **l'INSEE** (Institut National de la Statistique et des Etudes économiques). 
 Notre étude reposera sur **quatre fichiers de données**, chacun apportant un éclairage spécifique sur les disparités observées en France : 
 
-| 📁 **Nom du fichier**                           | 📌 **Description** |
+| **Nom du fichier**                           | **Description** |
 |---------------------------------------------|------------------|
 | **base_etablissement_par_tranche_effectif.csv** | Contient le nombre d’entreprises par commune française, classées selon leur taille. Permet d’analyser la répartition des entreprises sur le territoire. |
 | **name_geographic_information.csv**         | Fournit des informations géographiques détaillées sur chaque ville (latitude, longitude, codes et noms des régions et départements). |
@@ -14,17 +14,17 @@ Notre étude reposera sur **quatre fichiers de données**, chacun apportant un �
 
 En croisant ce différentes sources de données, nous visons à : 
 
-✅ Identifier les inégalités économiques et démographiques entre les territoires français.  
-✅ Analyser la répartition des entreprises et son impact sur l'emploi et les salaires.  
-✅ Mettre en évidence les écarts salariaux en fonction de l’âge, du sexe et de la catégorie professionnelle.  
-✅ Avoir une vision claire de ce qui se passe dans les différentes régions pour mieux comprendre les problèmes liés aux inégalités entre les territoires.
+ - Identifier les inégalités économiques et démographiques entre les territoires français.  
+ - Analyser la répartition des entreprises et son impact sur l'emploi et les salaires.  
+ - Mettre en évidence les écarts salariaux en fonction de l’âge, du sexe et de la catégorie professionnelle.  
+ - Avoir une vision claire de ce qui se passe dans les différentes régions pour mieux comprendre les problèmes liés aux inégalités entre les territoires.
 
 Dans la suite de cette introduction, nous détaillerons les différentes dimensions contenues dans nos quatre fichiers de données et présenterons notre plan d'analyse.
 
 
-## 📊 DONNEES
+## DONNEES
 
-### 📁 FICHIER 1 : `base_etablissement_par_tranche_effectif.csv`
+### FICHIER 1 : `base_etablissement_par_tranche_effectif.csv`
 
 Ce fichier contient les données relatives au **nombre d'établissements (entreprises ou structures économiques)** présents dans chaque commune, classés par **tranche d’effectif salarié**. Chaque ligne représente une **commune unique**, identifiée par son code INSEE.
 
@@ -32,17 +32,15 @@ Nous avons choisi ce fichier car il constitue un **indicateur direct de l’acti
 
 ---
 
-#### 📐 1. Format et structure
+#### Format et structure
 
-- **Format** : CSV  
-- **Encodage** : UTF-8  
+- **Format** : CSV   
 - **Nombre de lignes** : environ 35 000 (une par commune)  
 - **Nombre de colonnes** : 14  
-- **Clé de jointure** : `CODGEO`, commune à tous les autres fichiers
 
 ---
 
-#### 🏷️ 2. Description des variables
+#### Description des variables
 
 | **Nom**        | **Type**    | **Description** |
 |----------------|-------------|-----------------|
@@ -63,7 +61,7 @@ Nous avons choisi ce fichier car il constitue un **indicateur direct de l’acti
 
 ---
 
-#### 🧠 3. Catégorisation implicite
+#### Catégorisation implicite
 
 Les tranches d’effectifs peuvent être regroupées en **sous-catégories analytiques** :
 
@@ -75,48 +73,41 @@ Cela permet de **profiler chaque commune** selon la structure dominante de ses �
 
 ---
 
-#### 🔗 4. Intégration dans notre modèle
-
-Le fichier s’intègre dans un **modèle de données relationnel**, en étant relié :
-
-- Aux **données géographiques** via le fichier `name_geographic_information.csv` (clé : `CODGEO`)  
-- Aux **données salariales** via `net_salary_per_town_per_category.csv`  
-- À la **démographie locale** via `population.csv`
-
-Ce fichier constitue ainsi un **pilier du modèle**, apportant un indicateur structurel essentiel sur la **vitalité économique des territoires**, et servant de point d’entrée pour explorer les **corrélations entre richesse locale, tissu économique, salaires et démographie**.
-
-### 📁 FICHIER 2: name_geographic_information.csv
+### FICHIER 2: name_geographic_information.csv
 
 ce fichier contient des informations géographiques et administratives sur les circonscriptions françaises, avec les variables suivantes :
 
 | **Nom de la variable**                  | **Description** | **Type** |
 |----------------------------|----------------|---------------------|
-| Circonscription française  | Nom ou code de la circonscription électorale. | Texte |
-| Code région               | Code numérique associé à chaque région. | Entier |
-| Nom de la région          | Nom officiel de la région. | Texte |
-| Chef-lieu de la région    | Ville principale de la région. | Texte |
-| Numéro du département     | Code départemental (ex. 75 pour Paris). | Entier |
-| Nom du département        | Nom du département. | Texte |
-| Préfecture               | Ville où se trouve la préfecture du département. | Texte |
-| Numéro de circonscription | Identifiant numérique de la circonscription électorale. | Entier |
-| Nom de la commune        | Nom de la ville ou du village. | Texte |
-| Codes postaux            | Liste ou valeur unique du code postal de la commune. | Texte|
-| CODGEO                   | Code géographique unique pour identifier une commune. | Texte |
-| Latitude & Longitude     | Coordonnées GPS de la commune. | Flottant (2 valeurs) |
-| Indice d’éloignement     | Mesure de distance par rapport à un centre administratif ou une grande ville. | Flottant |
+| Circonscription française  | Nom ou code de la circonscription électorale. | Nominal |
+| Code région               | Code numérique associé à chaque région. | Numérique |
+| Nom de la région          | Nom officiel de la région. | Nominal |
+| Chef-lieu de la région    | Ville principale de la région. | Nominal |
+| Numéro du département     | Code départemental (ex. 75 pour Paris). | Numérique |
+| Nom du département        | Nom du département. | Nominal |
+| Préfecture               | Ville où se trouve la préfecture du département. | Nominal |
+| Numéro de circonscription | Identifiant numérique de la circonscription électorale. | Numérique |
+| Nom de la commune        | Nom de la ville ou du village. | Nominal|
+| Codes postaux            | Liste ou valeur unique du code postal de la commune. | Nominal|
+| CODGEO                   | Code géographique unique pour identifier une commune. | Nominal |
+| Latitude & Longitude     | Coordonnées GPS de la commune. | Numérique |
+| Indice d’éloignement     | Mesure de distance par rapport à un centre administratif ou une grande ville. | Numérique|
 
 
-Provenance des données : Ces informations proviennent de l’INSEE
-Format : csv.
+#### Format et structure
 
-### 📁 FICHIER 3: net_salary_per_town_per_category.csv
+- **Format** : CSV   
+- **Nombre de lignes** : environ 33704   
+- **Nombre de colonnes** : 13
+
+### FICHIER 3: net_salary_per_town_per_category.csv
 
 Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'évaluer les écarts de rénumération à plusieurs niveaux (géographique, professionnel et démographique).Il nous permettra donc de comprendre la répartition des revenus et détecter d'éventuelles inégalités salariales.
 
 
-#### 📊 Caractéristiques des données  
+#### Format et structure
 
-- **Nombre d’observations** : plus de 1000000  
+- **Nombre d’observations** : 5136 
 - **Nombre de variables** : 26  
 - **Format** : **CSV** 
 - **Type des variables** :  
@@ -124,9 +115,7 @@ Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'é
   - **Données numériques** : Salaires en milliers d'euros (**variables quantitatives continues**).  
 
 
-#### Présentation de chaque variable
-
-| 🏷️ **Nom de la variable** | 📌 **Description** | 🎭 **Type** |
+| **Nom de la variable** | **Description** | **Type** |
 |---------------------------|--------------------|------------|
 | **CODGEO**  | Code unique de la ville | Nominal |
 | **LIBGEO**  | Nom de la ville | Nominal|
@@ -160,7 +149,7 @@ Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'é
 
 
 
-### 📁 FICHIER 4: population.csv
+### FICHIER 4: population.csv
 Samella
 
 Analyse des données de la population
