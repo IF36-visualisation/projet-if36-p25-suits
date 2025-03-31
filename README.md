@@ -22,18 +22,19 @@ En croisant ce différentes sources de données, nous visons à :
 Dans la suite de cette introduction, nous détaillerons les différentes dimensions contenues dans nos quatre fichiers de données et présenterons notre plan d'analyse.
 
 
-## DONNEES
+## 📊 DONNEES
 
-### FICHIER 1: base_etablissement_par_tranche_effectif.csv
+### 📁 FICHIER 1: base_etablissement_par_tranche_effectif.csv
 Patrice
-### FICHIER 2: name_geographic_information.csv
+### 📁 FICHIER 2: name_geographic_information.csv
 Dora
 
-### FICHIER 3: net_salary_per_town_per_category.csv
+---
+
+### 📁 FICHIER 3: net_salary_per_town_per_category.csv
 
 Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'évaluer les écarts de rénumération à plusieurs niveaux (géographique, professionnel et démographique).Il nous permettra donc de comprendre la répartition des revenus et détecter d'éventuelles inégalités salariales.
 
----
 
 #### 📊 Caractéristiques des données  
 
@@ -44,45 +45,44 @@ Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'é
   - **Identifiants et localisation** : Codes et noms des villes (**variables qualitatives**).  
   - **Données numériques** : Salaires en milliers d'euros (**variables quantitatives continues**).  
 
----
 
 #### Présentation de chaque variable
 
 | 🏷️ **Nom de la variable** | 📌 **Description** | 🎭 **Type** |
 |---------------------------|--------------------|------------|
-| **CODGEO**  | Code unique de la ville | Qualitative (Nominal) |
-| **LIBGEO**  | Nom de la ville | Qualitative (Nominal) |
-| **SNHM14**  | 🔹 Salaire net moyen | Quantitative continue |
-| **SNHMC14** | 🔹 Salaire net moyen par heure pour les cadres | Quantitative continue |
-| **SNHMP14** | 🔹 Salaire net moyen par heure pour les professions intermédiaires | Quantitative continue |
-| **SNHME14** | 🔹 Salaire net moyen par heure pour les employés | Quantitative continue |
-| **SNHMO14** | 🔹 Salaire net moyen par heure pour les ouvriers | Quantitative continue |
-| **SNHMF14** | 🔹 Salaire net moyen des femmes | Quantitative continue |
-| **SNHMFC14** | 🔹 Salaire net moyen par heure pour les femmes cadres | Quantitative continue |
-| **SNHMFP14** | 🔹 Salaire net moyen par heure pour les femmes professions intermédiaires | Quantitative continue |
-| **SNHMFE14** | 🔹 Salaire net moyen par heure pour les femmes employées | Quantitative continue |
-| **SNHMFO14** | 🔹 Salaire net moyen par heure pour les femmes ouvrières | Quantitative continue |
-| **SNHMH14** | 🔹 Salaire net moyen des hommes | Quantitative continue |
-| **SNHMHC14** | 🔹 Salaire net moyen par heure pour les hommes cadres | Quantitative continue |
-| **SNHMHP14** | 🔹 Salaire net moyen par heure pour les hommes professions intermédiaires | Quantitative continue |
-| **SNHMHE14** | 🔹 Salaire net moyen par heure pour les hommes employés | Quantitative continue |
-| **SNHMHO14** | 🔹 Salaire net moyen par heure pour les hommes ouvriers | Quantitative continue |
-| **SNHM1814** | 🔹 Salaire net moyen par heure pour les 18-25 ans | Quantitative continue |
-| **SNHM2614** | 🔹 Salaire net moyen par heure pour les 26-50 ans | Quantitative continue |
-| **SNHM5014** | 🔹 Salaire net moyen par heure pour les plus de 50 ans | Quantitative continue |
-| **SNHMF1814** | 🔹 Salaire net moyen par heure pour les femmes de 18-25 ans | Quantitative continue |
-| **SNHMF2614** | 🔹 Salaire net moyen par heure pour les femmes de 26-50 ans | Quantitative continue |
-| **SNHMF5014** | 🔹 Salaire net moyen par heure pour les femmes de plus de 50 ans | Quantitative continue |
-| **SNHMH1814** | 🔹 Salaire net moyen par heure pour les hommes de 18-25 ans | Quantitative continue |
-| **SNHMH2614** | 🔹 Salaire net moyen par heure pour les hommes de 26-50 ans | Quantitative continue |
-| **SNHMH5014** | 🔹 Salaire net moyen par heure pour les hommes de plus de 50 ans | Quantitative continue |
+| **CODGEO**  | Code unique de la ville | Nominal |
+| **LIBGEO**  | Nom de la ville | Nominal|
+| **SNHM14**  | 🔹 Salaire net moyen | Numérique |
+| **SNHMC14** | 🔹 Salaire net moyen par heure pour les cadres | Numérique |
+| **SNHMP14** | 🔹 Salaire net moyen par heure pour les professions intermédiaires | Numérique |
+| **SNHME14** | 🔹 Salaire net moyen par heure pour les employés | Numérique |
+| **SNHMO14** | 🔹 Salaire net moyen par heure pour les ouvriers | Numérique |
+| **SNHMF14** | 🔹 Salaire net moyen des femmes | Numérique |
+| **SNHMFC14** | 🔹 Salaire net moyen par heure pour les femmes cadres | Numérique |
+| **SNHMFP14** | 🔹 Salaire net moyen par heure pour les femmes professions intermédiaires | Numérique |
+| **SNHMFE14** | 🔹 Salaire net moyen par heure pour les femmes employées | Numérique |
+| **SNHMFO14** | 🔹 Salaire net moyen par heure pour les femmes ouvrières | Numérique |
+| **SNHMH14** | 🔹 Salaire net moyen des hommes | Numérique |
+| **SNHMHC14** | 🔹 Salaire net moyen par heure pour les hommes cadres | Numérique |
+| **SNHMHP14** | 🔹 Salaire net moyen par heure pour les hommes professions intermédiaires | Numérique |
+| **SNHMHE14** | 🔹 Salaire net moyen par heure pour les hommes employés | Numérique |
+| **SNHMHO14** | 🔹 Salaire net moyen par heure pour les hommes ouvriers | Numérique |
+| **SNHM1814** | 🔹 Salaire net moyen par heure pour les 18-25 ans | Numérique |
+| **SNHM2614** | 🔹 Salaire net moyen par heure pour les 26-50 ans | Numérique |
+| **SNHM5014** | 🔹 Salaire net moyen par heure pour les plus de 50 ans | Numérique |
+| **SNHMF1814** | 🔹 Salaire net moyen par heure pour les femmes de 18-25 ans | Numérique |
+| **SNHMF2614** | 🔹 Salaire net moyen par heure pour les femmes de 26-50 ans | Numérique |
+| **SNHMF5014** | 🔹 Salaire net moyen par heure pour les femmes de plus de 50 ans | Numérique |
+| **SNHMH1814** | 🔹 Salaire net moyen par heure pour les hommes de 18-25 ans | Numérique |
+| **SNHMH2614** | 🔹 Salaire net moyen par heure pour les hommes de 26-50 ans | Numérique |
+| **SNHMH5014** | 🔹 Salaire net moyen par heure pour les hommes de plus de 50 ans | Numérique |
 
 ---
 
 
 
 
-### FICHIER 4: population.csv
+### 📁 FICHIER 4: population.csv
 Samella
 
 Analyse des données de la population
