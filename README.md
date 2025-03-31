@@ -172,6 +172,16 @@ Numériques : nombre de personnes.
 Nominales : nom de la commune, sexe.
 
 Le format du fichier est tabulaire, organisé sous forme de table avec des valeurs numériques et catégoriques.
+# Description des variables du jeu de données
+
+| **Nom de la variable**              | **Description**                                                      | **Nature**       |
+|----------------------------------|----------------------------------------------------------------|-------------|
+| `CODGEO`                         | Code géographique de la commune                               | Catégorielle |
+| `Nom de la commune`              | Nom de la commune correspondante                             | Texte       |
+| `Mode de cohabitation`           | Type de cohabitation des individus                           | Catégorielle |
+| `Tranche d’âge (code)`           | Tranche d’âge des individus (exprimée en code numérique)     | Numérique   |
+| `Sexe (1 = homme, 2 = femme)`    | Sexe des individus (1 pour homme, 2 pour femme)             | Catégorielle |
+| `Nombre de personnes`            | Nombre total de personnes pour chaque combinaison de valeurs | Numérique   |
 
 
 
