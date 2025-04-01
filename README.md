@@ -42,22 +42,23 @@ Nous avons choisi ce fichier car il donne une bonne idée de l’activité écon
 
 #### Description des variables
 
-| **Nom**        | **Type**    | **Description** |
-|----------------|-------------|-----------------|
-| **CODGEO**       | Nominale    | Code INSEE unique de la commune. Utilisé comme clé de jointure. |
-| **LIBGEO**       | Nominale    | Nom de la commune. Sert à la lisibilité dans les visuels. |
-| **REG**          | Ordinale    | Code de la région (2 chiffres). Sert à regrouper les communes par région. |
-| **DEP**          | Ordinale    | Code du département. Permet une agrégation intermédiaire. |
-| **E14TST**       | Numérique   | Nombre total d'établissements dans la commune. |
-| **E14TS0ND**     | Numérique   | Établissements sans effectif connu ou non déterminé. |
-| **E14TS1**       | Numérique   | Établissements de 1 à 5 salariés. |
-| **E14TS6**       | Numérique   | Établissements de 6 à 9 salariés. |
-| **E14TS10**      | Numérique   | Établissements de 10 à 19 salariés. |
-| **E14TS20**      | Numérique   | Établissements de 20 à 49 salariés. |
-| **E14TS50**      | Numérique   | Établissements de 50 à 99 salariés. |
-| **E14TS100**    | Numérique   | Établissements de 100 à 199 salariés. |
-| **E14TS200**     | Numérique   | Établissements de 200 à 499 salariés. |
-| **E14TS500**     | Numérique   | Établissements de 500 salariés et plus. |
+| **Nom**        | **Description**                                           | **Type**    |
+|----------------|-----------------------------------------------------------|-------------|
+| **CODGEO**     | Code INSEE unique de la commune. Utilisé comme clé de jointure. | Nominale    |
+| **LIBGEO**     | Nom de la commune. Sert à la lisibilité dans les visuels. | Nominale    |
+| **REG**        | Code de la région (2 chiffres). Sert à regrouper les communes par région. | Ordinale    |
+| **DEP**        | Code du département. Permet une agrégation intermédiaire. | Ordinale    |
+| **E14TST**     | Nombre total d'établissements dans la commune.           | Numérique   |
+| **E14TS0ND**   | Établissements sans effectif connu ou non déterminé.     | Numérique   |
+| **E14TS1**     | Établissements de 1 à 5 salariés.                         | Numérique   |
+| **E14TS6**     | Établissements de 6 à 9 salariés.                         | Numérique   |
+| **E14TS10**    | Établissements de 10 à 19 salariés.                       | Numérique   |
+| **E14TS20**    | Établissements de 20 à 49 salariés.                       | Numérique   |
+| **E14TS50**    | Établissements de 50 à 99 salariés.                       | Numérique   |
+| **E14TS100**   | Établissements de 100 à 199 salariés.                     | Numérique   |
+| **E14TS200**   | Établissements de 200 à 499 salariés.                     | Numérique   |
+| **E14TS500**   | Établissements de 500 salariés et plus.                  | Numérique   |
+
 
 ---
 
