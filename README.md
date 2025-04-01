@@ -35,7 +35,7 @@ Nous avons choisi ce fichier car il donne une bonne idée de l’activité écon
 #### Format et structure
 
 - **Format** : CSV   
-- **Nombre de lignes** : environ 35 000 (une par commune)  
+- **Nombre de lignes** : 36682
 - **Nombre de colonnes** : 14  
 
 ---
@@ -44,20 +44,20 @@ Nous avons choisi ce fichier car il donne une bonne idée de l’activité écon
 
 | **Nom**        | **Type**    | **Description** |
 |----------------|-------------|-----------------|
-| `CODGEO`       | Nominale    | Code INSEE unique de la commune. Utilisé comme clé de jointure. |
-| `LIBGEO`       | Nominale    | Nom de la commune. Sert à la lisibilité dans les visuels. |
-| `REG`          | Ordinale    | Code de la région (2 chiffres). Sert à regrouper les communes par région. |
-| `DEP`          | Ordinale    | Code du département. Permet une agrégation intermédiaire. |
-| `E14TST`       | Numérique   | Nombre total d'établissements dans la commune. |
-| `E14TS0ND`     | Numérique   | Établissements sans effectif connu ou non déterminé. |
-| `E14TS1`       | Numérique   | Établissements de 1 à 5 salariés. |
-| `E14TS6`       | Numérique   | Établissements de 6 à 9 salariés. |
-| `E14TS10`      | Numérique   | Établissements de 10 à 19 salariés. |
-| `E14TS20`      | Numérique   | Établissements de 20 à 49 salariés. |
-| `E14TS50`      | Numérique   | Établissements de 50 à 99 salariés. |
-| `E14TS100`     | Numérique   | Établissements de 100 à 199 salariés. |
-| `E14TS200`     | Numérique   | Établissements de 200 à 499 salariés. |
-| `E14TS500`     | Numérique   | Établissements de 500 salariés et plus. |
+| **CODGEO**       | Nominale    | Code INSEE unique de la commune. Utilisé comme clé de jointure. |
+| **LIBGEO**       | Nominale    | Nom de la commune. Sert à la lisibilité dans les visuels. |
+| **REG**          | Ordinale    | Code de la région (2 chiffres). Sert à regrouper les communes par région. |
+| **DEP**          | Ordinale    | Code du département. Permet une agrégation intermédiaire. |
+| **E14TST**       | Numérique   | Nombre total d'établissements dans la commune. |
+| **E14TS0ND**     | Numérique   | Établissements sans effectif connu ou non déterminé. |
+| **E14TS1**       | Numérique   | Établissements de 1 à 5 salariés. |
+| **E14TS6**       | Numérique   | Établissements de 6 à 9 salariés. |
+| **E14TS10**      | Numérique   | Établissements de 10 à 19 salariés. |
+| **E14TS20**      | Numérique   | Établissements de 20 à 49 salariés. |
+| **E14TS50**      | Numérique   | Établissements de 50 à 99 salariés. |
+| **E14TS100**    | Numérique   | Établissements de 100 à 199 salariés. |
+| **E14TS200**     | Numérique   | Établissements de 200 à 499 salariés. |
+| **E14TS500**     | Numérique   | Établissements de 500 salariés et plus. |
 
 ---
 
@@ -88,41 +88,37 @@ ce fichier contient des informations géographiques et administratives sur les c
 
 | **Nom de la variable**                  | **Description** | **Type** |
 |----------------------------|----------------|---------------------|
-| Circonscription française  | Nom ou code de la circonscription électorale. | Nominal |
-| Code région               | Code numérique associé à chaque région. | Numérique |
-| Nom de la région          | Nom officiel de la région. | Nominal |
-| Chef-lieu de la région    | Ville principale de la région. | Nominal |
-| Numéro du département     | Code départemental (ex. 75 pour Paris). | Numérique |
-| Nom du département        | Nom du département. | Nominal |
-| Préfecture               | Ville où se trouve la préfecture du département. | Nominal |
-| Numéro de circonscription | Identifiant numérique de la circonscription électorale. | Numérique |
-| Nom de la commune        | Nom de la ville ou du village. | Nominal|
-| Codes postaux            | Liste ou valeur unique du code postal de la commune. | Nominal|
-| CODGEO                   | Code géographique unique pour identifier une commune. | Nominal |
-| Latitude & Longitude     | Coordonnées GPS de la commune. | Numérique |
-| Indice d’éloignement     | Mesure de distance par rapport à un centre administratif ou une grande ville. | Numérique|
-
+| **EU_circo**                  | Nom ou code de la circonscription électorale. | Nominal |
+| **Code_région**               | Code numérique associé à chaque région. | Numérique |
+| **nom_région**          | Nom officiel de la région. | Nominal |
+| **chef.lieu_région**    | Ville principale de la région. | Nominal |
+| **numéro_département**     | Code départemental (ex. 75 pour Paris). | Numérique |
+| **nom_département**        | Nom du département. | Nominal |
+| **préfecture**               | Ville où se trouve la préfecture du département. | Nominal |
+| **numéro_circonscription** | Identifiant numérique de la circonscription électorale. | Numérique |
+| **nom_commune**       | Nom de la ville ou du village. | Nominal|
+| **codes_postaux**            | Liste ou valeur unique du code postal de la commune. | Nominal|
+| **Code_insee**                   | Code géographique unique pour identifier une commune. | Nominal |
+| **Latitude & Longitude**     | Coordonnées GPS de la commune. | Numérique |
 
 #### Format et structure
 
 - **Format** : CSV   
-- **Nombre de lignes** : environ 33704   
-- **Nombre de colonnes** : 13
+- **Nombre de lignes** : 33704   
+- **Nombre de colonnes** : 12
 
 ### FICHIER 3: net_salary_per_town_per_category.csv
 
-Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'évaluer les écarts de rénumération à plusieurs niveaux (géographique, professionnel et démographique).Il nous permettra donc de comprendre la répartition des revenus et détecter d'éventuelles inégalités salariales.
+Nous avons choisi d'inclure ce fichier dans notre analyse car il permettra d'évaluer les écarts de rénumération à plusieurs niveaux (géographique, professionnel et démographique).Il nous permettra donc de comprendre la répartition des revenus et détecter d'éventuelles inégalités salariales.
 
 
 #### Format et structure
 
 - **Nombre d’observations** : 5136 
 - **Nombre de variables** : 26  
-- **Format** : **CSV** 
-- **Type des variables** :  
-  - **Identifiants et localisation** : Codes et noms des villes (**variables qualitatives**).  
-  - **Données numériques** : Salaires en milliers d'euros (**variables quantitatives continues**).  
+- **Format** : **CSV**
 
+**Bon à savoir** : Les salaires contenus dans ce fichier sont donnés en milliers d'euros.
 
 | **Nom de la variable** | **Description** | **Type** |
 |---------------------------|--------------------|------------|
@@ -157,26 +153,8 @@ Nous avons choisir d'inclure ce fichier dans notre analyse car il permettra d'é
 
 
 ### FICHIER 4: population.csv
-Samella
 
-Analyse des données de la population
-
-1. Description des données
-Le jeu de données représente des informations démographiques organisées par commune. Chaque ligne du tableau correspond à une tranche d'âge spécifique, un mode de cohabitation et un genre, avec une colonne indiquant le nombre de personnes concernées. Les principales dimensions des données sont :
-
-Géographique : identifiée par le code INSEE de la commune (CODGEO) et son nom (Nom de la commune).
-
-Démographique : répartition des habitants selon la tranche d'âge (code), le sexe (1 = homme, 2 = femme) et le mode de cohabitation (indiquant le type de ménage).
-
-Effectif : nombre de personnes appartenant à chaque groupe de classification (Nombre de personnes).
-
-Les variables peuvent être classées en trois catégories :
-
-Ordinales : tranche d'âge, mode de cohabitation.
-
-Numériques : nombre de personnes.
-
-Nominales : nom de la commune, sexe.
+Ce fichier contient des informations démographiques organisées par commune. Chaque ligne du tableau correspond à une tranche d'âge spécifique, un mode de cohabitation et un genre, avec une colonne indiquant le nombre de personnes concernées.
 
 #### Format et structure
 
@@ -184,16 +162,28 @@ Nominales : nom de la commune, sexe.
 - **Nombre de variables** : 6 
 - **Format** : **CSV** 
 
-# Description des variables du jeu de données
 
 | **Nom de la variable**              | **Description**                                                      | **Type**       |
 |----------------------------------|----------------------------------------------------------------|-------------|
-| `CODGEO`                         | Code géographique de la commune                               | Nominal|
-| `Nom de la commune`              | Nom de la commune correspondante                             | Nominal |
-| `Mode de cohabitation`           | Type de cohabitation des individus                           | Nominal |
-| `Tranche d’âge (code)`           | Tranche d’âge des individus (exprimée en code numérique)     | Numérique|
-| `Sexe (1 = homme, 2 = femme)`    | Sexe des individus (1 pour homme, 2 pour femme)             | Nominal |
-| `Nombre de personnes`            | Nombre total de personnes pour chaque combinaison de valeurs | Numérique |
+| **CODGEO**                         | Code géographique de la commune                               | Nominal|
+| **LIBGEO**              | Nom de la commune correspondante                             | Nominal |
+| **MOCO**           | Type de cohabitation des individus                           | Nominal |
+| **AGE80_17**           | Tranche d’âge des individus (exprimée en code numérique)     | Numérique|
+| **SEXE**    | Sexe des individus (1 pour homme, 2 pour femme)             | Nominal |
+| **NB**            | Nombre total de personnes pour chaque combinaison de valeurs | Numérique |
+
+Bon à savoir : le mode de cohabitation dans ce dataset a été donné sous forme de codes avec les significations suivantes :
+
+| Code | Description                                    |
+|------|----------------------------------------------|
+| 11   | Enfants vivant avec deux parents           |
+| 12   | Enfants vivant avec un seul parent         |
+| 21   | Adultes en couple sans enfant              |
+| 22   | Adultes en couple avec enfants             |
+| 23   | Adultes vivant seuls avec enfants          |
+| 31   | Personnes vivant en colocation |
+| 32   | Personnes vivant seules                    |
+
 
 
 ## PLAN D'ANALYSE
@@ -204,15 +194,19 @@ Dans cette partie nous formulerons un ensemble de questions d'analyse qui nous p
 
 ### Existe-t-il des différences significatives entre les salaires des différentes villes françaises ?
 Cette question pourra nous permettre de mettre en lumière de potentielles disparités salariales géographiques. Les variables qui seront utilisées sont : **SNHM14** (le salaire moyen) et **LIBGEO** (nom de la ville) du fichier `net_salary_per_town_per_category.csv`.  
-Notre objectif ici étant de faire une **comparaison** des différents salaires moyens par ville. Les visualisations envisagées sont : **une carte géographique** (choroplèthe), **un Bar Chart**.  
-Comme information que nous pensons pouvoir obtenir : le fait que les grandes villes comme Paris aient des salaires plus élevés que les zones rurales ou petites villes.
+Notre objectif ici étant de faire une **comparaison** des différents salaires moyens par ville. Les visualisations envisagées sont : **une carte géographique**, **un Bar Chart**.  
+D'après un article rédigé par **Tatamo Ny Aina, publié le 27/05/2024 sur "les villes françaises où les habitants sont le mieux payés en 2024"**, il existe effectivemment des disparités salariales entre les différentes villes françaises. En effet cet article montre que la moyenne des salaires est plus élevée dans les grandes villes. On s'attends donc à obtenir une information comme quoi le salaire moyen est plus elevé à Paris qu'à Troyes.
+
+**Source** : https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/
 
 ---
 
 ### Comment les salaires varient-ils en fonction des catégories professionnelles (cadres, employés, ouvriers, etc.) ?
 Cette question permettra d’observer les disparités salariales selon le statut professionnel. Les variables mobilisées sont : **SNHMC14**, **SNHMP14**, **SNHME14**, **SNHMO14** du fichier `net_salary_per_town_per_category.csv`.  
 L’objectif est de réaliser une **comparaison entre groupes**. Les visualisations adaptées seront : **bar chart groupé** ou **boxplot**.  
-Nous nous attendons à observer une hiérarchie des salaires, avec les cadres mieux rémunérés que les professions intermédiaires, elles-mêmes mieux rémunérées que les employés et ouvriers.
+Si nous nous appuyons sur l'article publié par **editions-artalys le 30 janvier 2025 sur l'évolution du salaire moyen en France**, nous nous attendons à observer une hiérarchie des salaires, avec les cadres mieux rémunérés que les professions intermédiaires, elles-mêmes mieux rémunérées que les employés et ouvriers.
+
+**Source** : https://www.editions-artalys.com/levolution-du-salaire-moyen-en-france-ce-que-vous-devez-savoir/#:~:text=Ces%20chiffres%20masquent%20des%20%C3%A9carts%20significatifs%20selon%20les,repr%C3%A9sente%20un%20facteur%20majeur%20dans%20l%E2%80%99%C3%A9volution%20des%20salaires 
 
 ---
 
@@ -223,17 +217,13 @@ Nous pensons mettre en évidence que les femmes sont souvent moins rémunérées
 
 ---
 
-### Existe-t-il des différences salariales spécifiques entre hommes et femmes dans certaines tranches d'âge ?
-Nous utilisons ici les variables : **SNHMF1814**, **SNHMF2614**, **SNHMF5014**, **SNHMH1814**, **SNHMH2614**, **SNHMH5014**.  
-L’objectif est de faire une **comparaison croisée** entre âge et genre. On s’attend à voir si l’écart salarial évolue avec l’âge. Les visualisations possibles sont : **bar chart groupé** ou **line plot**.  
-Une difficulté potentielle sera la représentation inégale des tranches d’âge dans certaines communes.
-
----
-
 ### Comment le salaire moyen évolue-t-il en fonction de l'âge ?
 Nous étudierons les variables **SNHM1814**, **SNHM2614**, **SNHM5014**.  
-L’objectif est de représenter l’**évolution des salaires** au fil des tranches d’âge. Le type d’analyse est longitudinal et la visualisation envisagée est : **line plot**.  
-Nous nous attendons à voir une augmentation des salaires avec l’âge jusqu’à un certain seuil. La limite est la granularité (tranches larges).
+L’objectif est de représenter l’**évolution des salaires** au fil des tranches d’âge. Le type de visualisation envisagée est donc : **une line chart**.  
+Un article publié le 09/03/2019 dans **les clés du social sur l'évolution des salaires selon l'âge** stipule que le salaire net moyen est établi à 1350 € en moyenne à 25 ans, puis il augmente ensuite pendant 10 à 15 ans, stagne après autour de 2000 €, pour remonter dans les 10 dernières années de carrière jusqu’à 2300 € en moyenne. Nous nous attendons donc à obtenir une information selon laquelle le salaire moyen des séniors est plus élevé que celui des jeunes débutants.
+
+**Source** : https://www.clesdusocial.com/comment-evoluent-les-salaires-selon-l-age#:~:text=Ainsi%2C%20le%20salaire%20net%20moyen%20est%20%C3%A9tabli%20%C3%A0,de%20carri%C3%A8re%20jusqu%E2%80%99%C3%A0%202%20300%20%E2%82%AC%20en%20moyenne.
+
 
 ---
 
@@ -244,16 +234,9 @@ Nous pensons que les grandes entreprises influencent positivement les salaires, 
 
 ---
 
-### Y a-t-il des écarts salariaux significatifs entre les hommes et les femmes selon les régions ou départements ?
-Les variables exploitées seront : **SNHMF14**, **SNHMH14**, **REG**, **DEP**.  
-L’objectif est de faire une **comparaison spatiale** des écarts hommes/femmes. Visualisation : **heatmap régionale**, **carte choroplèthe des écarts**.  
-Nous pensons observer des inégalités plus fortes dans certaines régions, mais cela peut être influencé par des facteurs économiques locaux.
-
----
-
 ### La structure d’âge d’une commune influence-t-elle la taille moyenne des entreprises qui s’y installent ?
-Les variables concernées seront extraites de `population.csv` (tranches d’âge) et des tranches d'effectif d'entreprises `E14TS*`.  
-L’objectif est de tester une **relation entre population active et type d'entreprises**. Visualisation : **scatter plot**, **matrice de corrélation**.  
+Les variables concernées seront extraites de `population.csv` (tranches d’âge) et des tranches d'effectif d'entreprises **E14TS**.  
+L’objectif est de tester une **relation entre population active et type d'entreprises**. Les types de visualisation envisagés sont donc : **un scatter plot**, **une matrice de corrélation**.  
 Une difficulté pourrait être le manque de données fines sur les âges exacts des travailleurs.
 
 ---
@@ -261,22 +244,15 @@ Une difficulté pourrait être le manque de données fines sur les âges exacts 
 ### Les communes isolées (géographiquement éloignées) sont-elles aussi celles où l’on observe les plus faibles niveaux de salaires et d’activité économique ?
 Nous croiserons **SNHM14**, **E14TST** et l’indice **éloignement**.  
 L’objectif est de rechercher une **corrélation géographique**. Les visualisations proposées sont : **scatter plot** et **carte de chaleur**.  
-Le concept d'éloignement devra être précisé, car il peut englober divers critères.
-
----
-
-### Le nombre d’habitants dans une tranche d’âge donnée (ex : 18–25 ans) influence-t-il les salaires moyens observés dans cette commune ?
-Les données utilisées seront : **NB (effectif)** pour la tranche d’âge et **SNHM14**.  
-Objectif : analyser une **relation entre population jeune et rémunération**. Visualisation : **scatter plot coloré**.  
-On s’attend à voir que certaines communes jeunes (universitaires) ont un salaire moyen plus bas.
+Le concept d'éloignement devra être précisé, car il peut englober divers critères. Nous nous documentons encore sur la signification de ce concept.
 
 ---
 
 ### Les régions les plus denses en population sont-elles aussi les plus diversifiées en termes de types d’entreprises ?
 Variables mobilisées : **population totale** et diversité dans **E14TS*** (nombre de classes d’effectifs présentes).  
-L’objectif est d’analyser la **corrélation entre densité et diversité économique**. Visualisation : **scatter plot** ou **bubble chart**.  
-Une limite : comment définir le seuil pour qu’un type d’entreprise soit considéré comme “présent” dans une commune.
+L’objectif est d’analyser la **corrélation entre densité et diversité d'entreprises**.Les types de visualisation envisagés sont donc : **un scatter plot** ou **une bubble chart**.  
 
-# Source
+
+**Source**
 Lien Dataset : https://www.kaggle.com/datasets/etiennelq/french-employment-by-town
 
