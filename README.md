@@ -189,7 +189,7 @@ Nominales : nom de la commune, sexe.
 
 ## PLAN D'ANALYSE
 
-Dans cette partie nous formulerons un ensemble de questions d'analyse qui nous permettront de parvenir à notre objectif principal, qui a titre de rappel consiste à faire ressortir les inégalités en matière d'emploi, de démographie et de salaire en France.
+Dans cette partie nous formulerons un ensemble de questions d'analyse qui nous permettront de parvenir à notre objectif principal, qui à titre de rappel consiste à faire ressortir les inégalités en matière d'emploi, de démographie et de salaire en France.
 
 ---
 
@@ -267,4 +267,7 @@ On s’attend à voir que certaines communes jeunes (universitaires) ont un sala
 Variables mobilisées : **population totale** et diversité dans **E14TS*** (nombre de classes d’effectifs présentes).  
 L’objectif est d’analyser la **corrélation entre densité et diversité économique**. Visualisation : **scatter plot** ou **bubble chart**.  
 Une limite : comment définir le seuil pour qu’un type d’entreprise soit considéré comme “présent” dans une commune.
+
+# Source
+Lien Dataset : https://www.kaggle.com/datasets/etiennelq/french-employment-by-town
 
