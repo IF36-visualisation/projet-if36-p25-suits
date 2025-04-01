@@ -28,7 +28,7 @@ Dans la suite de cette introduction, nous détaillerons les différentes dimensi
 
 Ce fichier contient les données relatives au **nombre d'établissements (entreprises ou structures économiques)** présents dans chaque commune, classés par **tranche d’effectif salarié**. Chaque ligne représente une **commune unique**, identifiée par son code INSEE.
 
-Nous avons choisi ce fichier car il constitue un **indicateur direct de l’activité économique locale**. Il permet notamment d’analyser la **présence de TPE, PME et grandes entreprises**, ce qui est un levier d’explication crucial pour les écarts de salaires, la répartition de la population active, et l’attractivité territoriale.
+Nous avons choisi ce fichier car il donne une bonne idée de l’activité économique dans chaque commune. En connaissant le nombre d’entreprises et leur taille (TPE, PME, grandes entreprises), on peut mieux comprendre pourquoi certaines zones sont plus dynamiques que d’autres, ou pourquoi les salaires et la population active ne sont pas répartis de la même façon partout.
 
 ---
 
@@ -50,10 +50,10 @@ Nous avons choisi ce fichier car il constitue un **indicateur direct de l’acti
 | `DEP`          | Ordinale    | Code du département. Permet une agrégation intermédiaire. |
 | `E14TST`       | Numérique   | Nombre total d'établissements dans la commune. |
 | `E14TS0ND`     | Numérique   | Établissements sans effectif connu ou non déterminé. |
-| `E14TS1`       | Numérique   | Établissements de 1 à 5 salariés (**TPE**). |
+| `E14TS1`       | Numérique   | Établissements de 1 à 5 salariés. |
 | `E14TS6`       | Numérique   | Établissements de 6 à 9 salariés. |
 | `E14TS10`      | Numérique   | Établissements de 10 à 19 salariés. |
-| `E14TS20`      | Numérique   | Établissements de 20 à 49 salariés (**PME**). |
+| `E14TS20`      | Numérique   | Établissements de 20 à 49 salariés. |
 | `E14TS50`      | Numérique   | Établissements de 50 à 99 salariés. |
 | `E14TS100`     | Numérique   | Établissements de 100 à 199 salariés. |
 | `E14TS200`     | Numérique   | Établissements de 200 à 499 salariés. |
@@ -61,15 +61,24 @@ Nous avons choisi ce fichier car il constitue un **indicateur direct de l’acti
 
 ---
 
-#### Catégorisation implicite
+### Catégories d’entreprises selon l’INSEE
 
-Les tranches d’effectifs peuvent être regroupées en **sous-catégories analytiques** :
+Pour notre analyse, on s’appuie sur la manière dont l’INSEE classe les entreprises selon leur nombre de salariés. C’est important car ça nous permet de mieux comprendre la taille des entreprises présentes dans chaque commune, et donc leur impact sur l’économie locale.
 
-- **TPE (Très Petites Entreprises)** : `E14TS1` + `E14TS6`  
-- **PME (Petites et Moyennes Entreprises)** : `E14TS10` + `E14TS20` + `E14TS50`  
-- **Grandes entreprises** : `E14TS100` + `E14TS200` + `E14TS500`  
+Voici les grands groupes que nous avons utilisés :
 
-Cela permet de **profiler chaque commune** selon la structure dominante de ses établissements économiques. Ce regroupement est utile pour la segmentation, le clustering, ou les corrélations avec d'autres indicateurs (salaires, population...).
+- **TPE (Très Petites Entreprises)** : entre **1 et 9 salariés**  
+  → Cela correspond aux colonnes `E14TS1` (1 à 5 salariés) et `E14TS6` (6 à 9 salariés)
+
+- **PME (Petites et Moyennes Entreprises)** : entre **10 et 249 salariés**  
+  → Cela inclut `E14TS10` (10 à 19 salariés), `E14TS20` (20 à 49), `E14TS50` (50 à 99), `E14TS100` (100 à 199) et `E14TS200` (200 à 499)
+
+- **Grandes entreprises** : **à partir de 500 salariés**  
+  → Dans notre projet, nous avons décidé de considérer toutes les entreprises de la colonne `E14TS500` comme de grandes entreprises, même si cette catégorie peut inclure aussi bien des ETI que des très grandes entreprises.
+
+Ce regroupement nous aidera à classer les communes selon le type d’entreprises qu’elles accueillent, et à voir comment cela peut influencer les salaires ou l’attractivité du territoire.
+
+  **Source** : [INSEE - Définition des catégories d'entreprises](https://www.insee.fr/fr/statistiques/7678530?sommaire=7681078#documentation)
 
 ---
 
