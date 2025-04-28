@@ -262,129 +262,102 @@ Avec cette visualisation nous pouvons nettement voir amélioration comparé à l
 
 - Vers l'article publié par Tatamo : https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/
 
+
 ---
-title: "Analyse de la Diversité des Entreprises selon la Population"
+title: "Population et Diversité des Classes d'Entreprises : Quelle Relation ?"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(ggplot2)
 library(dplyr)
-
-```
+library(ggplot2)
+library(scales)
 # Objectif de l'étude
 
 L'objectif de cette étude est de répondre à la question suivante :
 
-**Les régions les plus denses en population sont-elles aussi les plus diversifiées en termes de types d’entreprises ?**
+Existe-t-il une relation entre la population totale d'une région et la diversité des tailles d'entreprises qu'elle héberge ?
 
-Nous allons analyser la corrélation entre :
-- la **population totale** d'une commune
-- et la **diversité des types d'établissements**.
+Pour ce faire, nous analyserons :
 
-```{r}
-# Chargement des packages
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(corrplot)
-library(readr) # Charger les données
-entreprises <- base_etablissement_par_tranche_effectif
-```
+- la population totale des régions françaises,
+- la diversité des classes d'entreprises (nombre de tailles d'établissements présentes).
+# Chargement interactif des données
+entreprises <- read.csv(file.choose(), sep = ",", encoding = "UTF-8")
+population <- read.csv("E:/P25/population.csv", sep = ",", encoding = "UTF-8")
+# Préparation des données
 
-```{r}
-# On considère les colonnes des différentes tailles d'entreprises
-entreprises_prepared <- entreprises %>%
+Nous allons :
+
+- Calculer pour chaque commune le nombre de classes d’entreprises existantes,
+- Fusionner ces données avec la population par commune,
+- Résumer les résultats au niveau régional.
+# Calcul du nombre de classes non nulles par commune
+entreprises_prepared_full <- entreprises %>%
   mutate(
-    nb_TPE = E14TS1 + E14TS6,
-    nb_PME = E14TS10 + E14TS20 + E14TS50 + E14TS100 + E14TS200,
-    nb_GE = E14TS500
+    nb_classes_non_nulles = (E14TS1 > 0) + (E14TS6 > 0) + (E14TS10 > 0) +
+                            (E14TS20 > 0) + (E14TS50 > 0) + (E14TS100 > 0) +
+                            (E14TS200 > 0) + (E14TS500 > 0)
   ) %>%
-```
+  select(CODGEO, REG, nb_classes_non_nulles)
+
+# Assurer que la table population_commune est prête
+population_commune <- population %>%
+  group_by(CODGEO) %>%
+  summarise(Population = sum(NB, na.rm = TRUE))
+
+# Fusion avec les données de population
+fusion_full <- entreprises_prepared_full %>%
+  inner_join(population_commune, by = "CODGEO")
+
+# Résumé par région
+region_summary_full <- fusion_full %>%
+  group_by(REG) %>%
+  summarise(
+    Total_Population = sum(Population, na.rm = TRUE),
+    Diversite_moyenne = mean(nb_classes_non_nulles, na.rm = TRUE)
+  )
+
 # Analyse exploratoire
 
 ## Question
 
-Nous nous demandons :
+Nous nous interrogeons :
 
-**Les communes les plus peuplées présentent-elles une diversité plus grande en termes de tailles d'entreprises ?**
+**Les régions les plus peuplées présentent-elles également une diversité plus importante en types d'entreprises ?**
 
-Nous nous attendons intuitivement à ce que les grandes communes accueillent **plus de types d'entreprises**.
-```{r}
+Notre hypothèse est qu'une population plus élevée pourrait favoriser un écosystème économique plus varié.
 
-```
+## Visualisation des résultats
 
-```{r}
-population_commune <- population %>%
-  group_by(CODGEO) %>%
-```
-
-
-```{r}
-# Jointure sur le code géographique (CODGEO)
-fusion <- entreprises_prepared %>%
-  inner_join(population_commune,by="CODGEO")
-
-```
-```{r}
-summarise(Population = sum(NB,na.rm=TRUE))
-
-```
-```{r}
-region_summary <- fusion %>%
-  group_by(REG) %>%
-  summarise(
-    Total_TPE = sum(nb_TPE, na.rm = TRUE),
-    Total_PME = sum(nb_PME, na.rm = TRUE),
-    Total_GE = sum(nb_GE, na.rm = TRUE),
-    Total_Population = sum(Population, na.rm = TRUE)
-  ) %>%
-  mutate(
-    Diversite = (Total_TPE > 0) + (Total_PME > 0) + (Total_GE>0)
-```
-
-# Interprétation
-
-Sur ce graphique, nous observons que :
-
-- Les communes avec une **petite population** ont souvent une **diversité faible** (peu de types d'entreprises différents).
-- À mesure que la **population augmente**, la **diversité tend à augmenter** également.
-- Toutefois, il existe une certaine variabilité : certaines **communes très peuplées** n'ont pas une **diversité maximale**
-
-```{r}
-# Scatter Plot avec régression linéaire
-ggplot(data_clean, aes(x = Population, y = Diversity)) +
-  geom_point(color = "darkgreen") +
-  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+# Scatter plot
+ggplot(region_summary_full, aes(x = Total_Population, y = Diversite_moyenne, size = Diversite_moyenne)) +
+  geom_point(color = "darkorange", alpha = 0.7) +
+  geom_text(aes(label = REG), vjust = -1, hjust = 0.5, size = 3.5) +
+  scale_x_log10(labels = comma) +
   labs(
-    title = "Population vs Diversité avec Tendance Linéaire",
-    x = "Population Totale",
-    y = "Diversité des Entreprises"
+    title = "Population vs Diversité des Classes d'Entreprises",
+    x = "Population totale (échelle log)",
+    y = "Diversité moyenne des entreprises"
   ) +
   theme_minimal() +
-  scale_x_continuous(labels = scales::comma_format()) +  # Formater l'axe des x
-  scale_y_continuous(labels = scales::comma_format())    # Formater l'axe des y
-
-```
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12)
+  )
 # Interprétation
 
-La **droite de régression** montre une **tendance positive** :
+À partir du graphique obtenu, plusieurs observations peuvent être faites :
 
-- Plus la **population** augmente, plus la **diversité d'établissements** tend à augmenter.
+- Les régions les moins peuplées (situées à gauche du graphique) tendent à présenter une diversité plus faible de types d'entreprises, souvent entre 1 et 3 classes d'établissements.
+- À mesure que la population augmente, on observe globalement une diversification accrue, bien que ce ne soit pas systématique.
+- Certaines régions très peuplées (ex : région 11) affichent une diversité plus élevée, tandis que d'autres régions intermédiaires en population (ex : régions 82, 93) présentent une diversité moyenne.
+- Le nuage de points montre une tendance générale, mais également une forte dispersion : la population seule n'explique donc pas totalement la diversité économique.
+- La transformation logarithmique de l'axe des abscisses (Population totale) améliore considérablement la lisibilité des écarts entre petites et grandes régions.
 
-Cependant :
+Ainsi, même si la population semble être un facteur favorisant la diversité, d'autres éléments (économie locale, spécialisation sectorielle, urbanisation) doivent aussi être pris en compte pour expliquer les écarts observés.
 
-- Le **nuage de points** reste assez dispersé.
-- La **corrélation** existe, mais elle n'est pas parfaite.
-
-
-# À partir de notre exploration
-
-Il existe une **corrélation positive** entre la **taille de la population** et la **diversité des types d'entreprises**.
-
-Cependant, la relation est **modérée** : d'autres éléments (**attractivité économique**, **spécialisation industrielle**, **urbanisation**, etc.) pourraient expliquer la diversité observée.
-
-# Source des données
 
 Les données utilisées dans cette analyse proviennent de la source suivante :  
 **[Lien vers le dataset sur Kaggle](https://www.kaggle.com/datasets/etiennelq/french-employment-by-town)**
