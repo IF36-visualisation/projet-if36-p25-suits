@@ -1,6 +1,6 @@
 ---
 title: "Phase 1-IF36"
-author: "Patrice MBANGUE, Patricia NOTOUM TAMKO,Dora NGUEMO KAMWOUA, Samella LEUKOUO"
+author: "Patrice MBANGUE, Estelle Patricia NOTOUM TAMKO,Dora NGUEMO KAMWOUA, Samella LEUKOUO"
 date: "2025-04-23"
 output: html_document
 ---
@@ -27,7 +27,7 @@ En croisant ces différentes sources de données, nous visons à :
 
 # Questions
 
-## 2. Question : Comment les salaires varient-ils en fonction des catégories professionnelles et du sexe ?
+## Question : Comment les salaires varient-ils en fonction des catégories professionnelles et du sexe ?
 
 Cette question explore les disparités de genre au sein de chaque catégorie, en utilisant les variables SNHMFC14, SNHMFP14, SNHMFE14 et SNHMFO14 pour les femmes, pour les hommes : SNHMHC14, SNHMHP14, SNHMHE14 et SNHMHO14 et pour l'ensemble SNHMC14, SNHMP14, SNHME14, SNHMO14. L’objectif est de comparer les rémunérations par sexe pour un même poste à l’aide d’histogrammes groupés, afin de mettre en lumière les écarts de salaire. Nous souhaitons ainsi démontrer que les femmes perçoivent souvent des salaires inférieurs à ceux des hommes, y compris à poste équivalent comme le montre l'etude de l'INSEE "Le revenu salarial s’établit à 20 670 euros en moyenne en 2014" https://www.insee.fr/fr/statistiques/2560524#.
 
@@ -109,3 +109,52 @@ ggplot(salaire_moyen_sexe, aes(x = Categorie, y = Salaire_Moyen, fill = Sexe)) +
 ### Analyse
 
 Le graphique ci-dessus met en évidence des disparités salariales importantes selon la catégorie professionnelle et le sexe. De manière générale, les cadres perçoivent les salaires les plus élevés, suivis par les professions intermédiaires, puis les employés et enfin les ouvriers. Quelle que soit la catégorie, les hommes ont systématiquement un salaire net horaire moyen supérieur à celui des femmes, confirmant l’existence d’une inégalité salariale entre les sexes de. L’écart est particulièrement marqué chez les cadres et les ouvriers, tandis qu’il est légèrement moins prononcé chez les employés et les professions intermédiaires. Ces observations sont cohérentes avec les tendances mises en avant par l'etude de l'INSEE "Le revenu salarial s’établit à 20 670 euros en moyenne en 2014" https://www.insee.fr/fr/statistiques/2560524#, qui souligne à la fois la hiérarchie salariale entre les statuts professionnels et la persistance des écarts hommes-femmes.
+
+## Question : comment le salaire moyen net par heure nationale évolue t-il en fonction de l'âge ?
+
+Pour répondre à cette question, nous calculerons dans un premier temps la moyenne nationale (c'est-à-dire, qui tient compte de l'ensemble des communes françaises) de salaire net par heure pour chaque tranche d'âge.Par la suite, on construira une line chart pour observer l'évolution du salaire moyen net par heure national en fonction de la tranche d'âge.
+
+Un article publié le 09/03/2019 dans les clés du social sur l'évolution des salaires selon l'âge stipule que le salaire net moyen est établi à 1350 € en moyenne à 25 ans, puis il augmente ensuite pendant 10 à 15 ans, stagne après autour de 2000 €, pour remonter dans les 10 dernières années de carrière jusqu’à 2300 € en moyenne. Nous nous attendons donc à obtenir une information selon laquelle le salaire moyen des séniors est plus élevé que celui des jeunes débutants.
+
+### Visualisation: Line chart de l'évolution du salaire net moyen par heure en fonction de la tranche d'âge
+
+```{r}
+# Calculer les moyennes nationales pour chaque tranche d'âge
+salaires_age <- data %>%
+  summarise(
+    `18-25 ans` = mean(SNHM1814, na.rm = TRUE),
+    `26-50 ans` = mean(SNHM2614, na.rm = TRUE),
+    `50 ans et plus` = mean(SNHM5014, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = everything(), names_to = "Tranche_Age", values_to = "Salaire_Moyen")
+
+# Tracer de la line chart
+ggplot(salaires_age, aes(x = Tranche_Age, y = Salaire_Moyen, group = 1)) +
+  geom_line(color = "#0072B2", size = 1.5) +
+  geom_point(color = "#D55E00", size = 4) +
+  labs(
+    title = "Évolution du salaire net moyen en fonction de l'âge",
+    x = "Tranche d'âge",
+    y = "Salaire net moyen horaire (en milliers d'euros)",
+    caption = "Source : Données issues du fichier net_salary_per_town_per_category.csv"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 14),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "black")
+  )
+
+```
+### Analyse
+Sur le graphe obtenu, on constate que le salaire net moyen horaire augmente bet et bien avec l'âge, et qu'effectivement les jeunes débutants sont moins payés que les séniors.Ceci peut être expliqué par de nombreux facteurs, à savoir : 
+
+* L'expérience professionnelle : les séniors accumulent plus d'années d'expérience professionnelle que les débutants, ce qui renforce leur valeur sur le marché de l'emploi.
+* Négociation salariale : d'après un article publié le 17/09/2024 sur Franceinfo, un salarié plus âgé, fort de ses compétences et de sa productivité est en mesure de mieux "se vendre" face à ses employeurs, donc de négocier son salaire à la hausse.
+* L'ancienneté : toujours d'après l'article publié sur Franceinfo, dans certaines entreprises ou branches professionnelles, il existe des grilles de salire qui prévoient des augmentations en fonction de l'ancienneté.Ceci entraînant donc une hausse mécanique des salaires au fil du temps passé au sein de l'entreprise.
+
+**Sources des articles : ** 
+https://www.clesdusocial.com/comment-evoluent-les-salaires-selon-l-age#:~:text=Ainsi%2C%20le%20salaire%20net%20moyen%20est%20%C3%A9tabli%20%C3%A0,de%20carri%C3%A8re%20jusqu%E2%80%99%C3%A0%202%20300%20%E2%82%AC%20en%20moyenne
+https://www.francetvinfo.fr/economie/disparites-salariales/salaires-pourquoi-les-vieux-sont-mieux-lotis-que-les-jeunes_675195.html
+
