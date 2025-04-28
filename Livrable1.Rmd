@@ -135,7 +135,7 @@ ggplot(salaires_age, aes(x = Tranche_Age, y = Salaire_Moyen, group = 1)) +
   labs(
     title = "Évolution du salaire net moyen en fonction de l'âge",
     x = "Tranche d'âge",
-    y = "Salaire net moyen horaire (en milliers d'euros)",
+    y = "Salaire net moyen horaire (€)",
     caption = "Source : Données issues du fichier net_salary_per_town_per_category.csv"
   ) +
   theme_minimal(base_size = 14) +
