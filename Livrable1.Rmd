@@ -158,3 +158,106 @@ Sur le graphe obtenu, on constate que le salaire net moyen horaire augmente bet 
 https://www.clesdusocial.com/comment-evoluent-les-salaires-selon-l-age#:~:text=Ainsi%2C%20le%20salaire%20net%20moyen%20est%20%C3%A9tabli%20%C3%A0,de%20carri%C3%A8re%20jusqu%E2%80%99%C3%A0%202%20300%20%E2%82%AC%20en%20moyenne
 https://www.francetvinfo.fr/economie/disparites-salariales/salaires-pourquoi-les-vieux-sont-mieux-lotis-que-les-jeunes_675195.html
 
+## Question : Existe-t-il des différences significatives entre les salaires des différentes villes françaises ?
+
+Pour répondre à cette question nous avons pensé à deux possibilités : 
+- Faire une répartition des différents salaires sur une carte de la France.
+- Faire une comparaison des salaires via un histogramme dans les différentes villes.
+
+D'après un article rédigé par Tatamo Ny Aina, publié le 27/05/2024 sur "les villes françaises où les habitants sont le mieux payés en 2024", il existe effectivemment des disparités salariales entre les différentes villes françaises. En effet cet article montre que la moyenne des salaires est plus élevée dans les grandes villes. On s'attends donc à obtenir une information comme quoi le salaire moyen est plus elevé à Paris qu'à Troyes.
+
+### Première visualisation : répartition des différents salaires moyen horaire sur une carte de la France.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(maps)      # Pour récupérer la carte de France
+library(readr)     # Pour lire les différents jeux de données
+library(sf)
+library(plotly) #Librairie permettant d'ajouter des infos bulles sur notre carte
+
+
+# Chargement des données
+data_salaire <- read_csv("C:/Users/HP/Documents/IF36/net_salary_per_town_categories.csv")
+data_localisation <- read_csv("C:/Users/HP/Documents/IF36/name_geographic_information.csv")
+
+# Chargement de la carte de la France
+data_localisation <- data_localisation %>% mutate(code_insee = as.character(code_insee))
+
+data_localisation <- data_localisation %>% mutate(code_insee = if_else(nchar(code_insee) == 4, paste0("0", code_insee), code_insee)) %>% mutate(longitude = as.numeric(longitude), latitude = as.numeric(latitude))
+
+data_complet <- left_join(data_salaire, data_localisation, by=c("CODGEO"="code_insee"))
+
+france_map <- map_data("france")
+ggplot() + geom_polygon(data = france_map, aes(x = long, y = lat, group = group),fill = "white", color = "black")+ geom_point(data = data_complet, aes(x = longitude, y = latitude, color = SNHM14),size = 2) +
+  scale_color_viridis_c(option = "plasma") +
+  theme_minimal() +
+  labs(title = "Salaire moyen horaire par ville en France",
+       color = "Salaire moyen horaire (€)",
+       caption ="source: -net_salary_per_town_categories.csv
+       -name_geographic_information.csv" )
+
+```
+### Analyse de la première visualisation
+
+En analysant cette visualisation nous avons appris un peu plus de notre dataset. Ainsi nous avons relevé les points suivants:
+
+- Les points sur la carte sont beaucoup trop touffu pour qu'on sache quel point appartient à quelle ville.
+- Pour comprendre le fichier et pouvoir l'utiliser, il faudrait connaitre parfaitement l'emplacement de chaque ville sur la carte(ce qui n'est pas donné).
+- Les points qui ont à peu près la même couleur ont tendance à être proches.
+
+Au vu des points ci-dessus, nous avons remarqué qu'il serait préférable de faire un regroupement par régions pour une meilleurs visualisation et d'ajouter des infos bules avec les noms de chaque régions.
+
+Mais avant de le faire, nous devons modifier notre fichier avec les nouvelles divisions des régions. Car datant de 2014, contient encore les anciennes régions.
+Source: https://deciders.io/fiches-pratiques/conseiller-regional/les-regions/pourquoi-a-t-on-fusionne-les-regions/#:~:text=%C3%80%20l%E2%80%99issue%20de%20la%20r%C3%A9forme%20territoriale%2C%20entr%C3%A9e%20en,la%20France%20sont%20les%20suivantes%20%3A%20Provence-Alpes-C%C3%B4te%20d%E2%80%99Azur. 
+
+```{r}
+data_complet <- data_complet %>%
+  mutate(nom_région = case_when(
+    nom_région %in% c("Rhône-Alpes", "Auvergne") ~ "Auvergne-Rhône-Alpes",
+    nom_région %in% c("Bourgogne", "Franche-Comté") ~ "Bourgogne-Franche-Comté",
+    nom_région == "Bretagne" ~ "Bretagne",
+    nom_région == "Centre" ~ "Centre-Val de Loire",
+    nom_région == "Corse" ~ "Corse",
+    nom_région %in% c("Alsace", "Lorraine", "Champagne-Ardenne") ~ "Grand Est",
+    nom_région %in% c("Picardie", "Nord-Pas-de-CalaisAquitaine") ~ "Hauts-de-France",
+    nom_région == "Île-de-France" ~ "Île-de-France",
+    nom_région %in% c("Haute-Normandie", "Basse-Normandie", "Basse-NormandiePays de la Loire") ~ "Normandie",
+    nom_région %in% c("Aquitaine", "Limousin", "Poitou-Charentes", "Nord-Pas-de-CalaisAquitaine") ~ "Nouvelle-Aquitaine",
+    nom_région %in% c("Midi-Pyrénées", "Languedoc-Roussillon") ~ "Occitanie",
+    nom_région %in% c("Pays de la Loire", "Basse-NormandiePays de la Loire") ~ "Pays de la Loire",
+    nom_région == "Provence-Alpes-Côte d'Azur" ~ "Provence-Alpes-Côte d'Azur",
+    TRUE ~ nom_région
+  )) %>%
+  filter(!nom_région %in% c("Guyane", "Martinique", "Guadeloupe", "La Réunion"))  # Exclure les DOM-TOM
+```
+Après avoir modifié notre dataset, nous allons procéder à la construction de notre carte.
+```{r}
+france_regions <- st_read("https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions-version-simplifiee.geojson")#Chargement du fichier JSON contenant la carte de la France avec ses régions
+data_region <- data_complet %>% group_by(nom_région) %>% summarise(salaire_moyen = mean(SNHM14, na.rm = TRUE))
+france_regions <- france_regions %>% rename(nom_région = nom)
+carte_salaire <- france_regions %>% left_join(data_region, by = "nom_région")
+
+carte_salaire <- ggplot(carte_salaire) +
+  geom_sf(aes(fill = salaire_moyen, tooltip = nom_région), color = "white") +
+  scale_fill_viridis_c(option = "plasma") +
+  labs(title = "Salaire moyen horaire par région en France",
+       fill = "Salaire moyen horaire (€)") +
+  theme_minimal()
+
+# Ajouter les infos bulles 
+ggplotly(carte_salaire)
+
+```
+sources: -net_salary_per_town_categories.csv
+       -name_geographic_information.csv
+       -https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions-version-simplifiee.geojson
+
+### Analyse de la visualisation finale
+
+Avec cette visualisation nous pouvons nettement voir amélioration comparé à l'ancien. Et comme on s'y attendait, on peut voir que la région Île de France où se trouve la ville de Paris a clairement un salaire plus élevé que celui de la région Grand Est où se trouve la ville de Troyes. Ceci pouvant être dû à plusieurs facteurs comme le prix moyen du mètre carré qui est par exemple à Paris de 30€ et à Strasbourg(ville de région Grand Est comme Troyes) de 14€.
+
+**Sources des articles : ** 
+- Pour le prix du mètre carré : https://www.cotes-et-mer.fr/actualites-immobilieres/classement-des-prix-des-loyers-en-france-palmares-des-10-grandes-villes.html#:~:text=Voici%20le%20classement%20des%20loyers%20moyens%20par%20m%C2%B2,Nantes%20%3A%2013%20%E2%82%AC%2Fm%C2%B2%20%2ASource%20%3A%20SeLoger%203.
+
+- Vers l'article publié par Tatamo : https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/
