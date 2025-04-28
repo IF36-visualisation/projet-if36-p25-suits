@@ -263,35 +263,15 @@ Avec cette visualisation nous pouvons nettement voir amélioration comparé à l
 - Vers l'article publié par Tatamo : https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/
 
 
----
-title: "Population et Diversité des Classes d'Entreprises : Quelle Relation ?"
----
+## Question : Existe-t-il une relation entre la population totale d'une région et la diversité des tailles d'entreprises qu'elle héberge ?
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-library(ggplot2)
-library(scales)
-# Objectif de l'étude
+Les régions les plus denses en population sont-elles aussi les plus diversifiées en termes de types d’entreprises ? Cette analyse vise à explorer la corrélation entre la taille de la population (variable : population totale, E14TS*) et la diversité entrepreneuriale (variable : nombre de classes d’effectifs d’entreprises présentes parmi les 8 classes recensées dans E14TS*). Pour répondre à cette question, nous utiliserons exclusivement un scatter plot, qui permettra de visualiser simplement la relation entre ces deux dimensions. L’hypothèse de départ est que plus la population est élevée, plus la diversité des entreprises sera importante, car une population nombreuse génère une demande variée. Toutefois, nous nous attendons aussi à trouver des cas où certaines régions très denses ne sont pas représentées par les classes d’entreprises de plus grande taille : cela pourrait s’expliquer par une spécialisation économique (par exemple, une forte concentration résidentielle sans présence significative d’industries ou de grandes entreprises). L’analyse devra ainsi permettre d’observer la tendance générale tout en identifiant d’éventuelles exceptions à cette corrélation.
 
-L'objectif de cette étude est de répondre à la question suivante :
-
-Existe-t-il une relation entre la population totale d'une région et la diversité des tailles d'entreprises qu'elle héberge ?
-
-Pour ce faire, nous analyserons :
-
-- la population totale des régions françaises,
-- la diversité des classes d'entreprises (nombre de tailles d'établissements présentes).
+### Visualisation
+```{r}
 # Chargement interactif des données
 entreprises <- read.csv(file.choose(), sep = ",", encoding = "UTF-8")
 population <- read.csv("E:/P25/population.csv", sep = ",", encoding = "UTF-8")
-# Préparation des données
-
-Nous allons :
-
-- Calculer pour chaque commune le nombre de classes d’entreprises existantes,
-- Fusionner ces données avec la population par commune,
-- Résumer les résultats au niveau régional.
 # Calcul du nombre de classes non nulles par commune
 entreprises_prepared_full <- entreprises %>%
   mutate(
@@ -318,18 +298,6 @@ region_summary_full <- fusion_full %>%
     Diversite_moyenne = mean(nb_classes_non_nulles, na.rm = TRUE)
   )
 
-# Analyse exploratoire
-
-## Question
-
-Nous nous interrogeons :
-
-**Les régions les plus peuplées présentent-elles également une diversité plus importante en types d'entreprises ?**
-
-Notre hypothèse est qu'une population plus élevée pourrait favoriser un écosystème économique plus varié.
-
-## Visualisation des résultats
-
 # Scatter plot
 ggplot(region_summary_full, aes(x = Total_Population, y = Diversite_moyenne, size = Diversite_moyenne)) +
   geom_point(color = "darkorange", alpha = 0.7) +
@@ -346,7 +314,10 @@ ggplot(region_summary_full, aes(x = Total_Population, y = Diversite_moyenne, siz
     axis.title = element_text(size = 14),
     axis.text = element_text(size = 12)
   )
-# Interprétation
+
+```
+
+### Analyse
 
 À partir du graphique obtenu, plusieurs observations peuvent être faites :
 
@@ -359,5 +330,4 @@ ggplot(region_summary_full, aes(x = Total_Population, y = Diversite_moyenne, siz
 Ainsi, même si la population semble être un facteur favorisant la diversité, d'autres éléments (économie locale, spécialisation sectorielle, urbanisation) doivent aussi être pris en compte pour expliquer les écarts observés.
 
 
-Les données utilisées dans cette analyse proviennent de la source suivante :  
-**[Lien vers le dataset sur Kaggle](https://www.kaggle.com/datasets/etiennelq/french-employment-by-town)**
+
