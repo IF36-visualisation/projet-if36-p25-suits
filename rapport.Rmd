@@ -261,3 +261,130 @@ Avec cette visualisation nous pouvons nettement voir amélioration comparé à l
 - Pour le prix du mètre carré : https://www.cotes-et-mer.fr/actualites-immobilieres/classement-des-prix-des-loyers-en-france-palmares-des-10-grandes-villes.html#:~:text=Voici%20le%20classement%20des%20loyers%20moyens%20par%20m%C2%B2,Nantes%20%3A%2013%20%E2%82%AC%2Fm%C2%B2%20%2ASource%20%3A%20SeLoger%203.
 
 - Vers l'article publié par Tatamo : https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/
+
+---
+title: "Analyse de la Diversité des Entreprises selon la Population"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+
+```
+# Objectif de l'étude
+
+L'objectif de cette étude est de répondre à la question suivante :
+
+**Les régions les plus denses en population sont-elles aussi les plus diversifiées en termes de types d’entreprises ?**
+
+Nous allons analyser la corrélation entre :
+- la **population totale** d'une commune
+- et la **diversité des types d'établissements**.
+
+```{r}
+# Chargement des packages
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(corrplot)
+library(readr) # Charger les données
+entreprises <- base_etablissement_par_tranche_effectif
+```
+
+```{r}
+# On considère les colonnes des différentes tailles d'entreprises
+entreprises_prepared <- entreprises %>%
+  mutate(
+    nb_TPE = E14TS1 + E14TS6,
+    nb_PME = E14TS10 + E14TS20 + E14TS50 + E14TS100 + E14TS200,
+    nb_GE = E14TS500
+  ) %>%
+```
+# Analyse exploratoire
+
+## Question
+
+Nous nous demandons :
+
+**Les communes les plus peuplées présentent-elles une diversité plus grande en termes de tailles d'entreprises ?**
+
+Nous nous attendons intuitivement à ce que les grandes communes accueillent **plus de types d'entreprises**.
+```{r}
+
+```
+
+```{r}
+population_commune <- population %>%
+  group_by(CODGEO) %>%
+```
+
+
+```{r}
+# Jointure sur le code géographique (CODGEO)
+fusion <- entreprises_prepared %>%
+  inner_join(population_commune,by="CODGEO")
+
+```
+```{r}
+summarise(Population = sum(NB,na.rm=TRUE))
+
+```
+```{r}
+region_summary <- fusion %>%
+  group_by(REG) %>%
+  summarise(
+    Total_TPE = sum(nb_TPE, na.rm = TRUE),
+    Total_PME = sum(nb_PME, na.rm = TRUE),
+    Total_GE = sum(nb_GE, na.rm = TRUE),
+    Total_Population = sum(Population, na.rm = TRUE)
+  ) %>%
+  mutate(
+    Diversite = (Total_TPE > 0) + (Total_PME > 0) + (Total_GE>0)
+```
+
+# Interprétation
+
+Sur ce graphique, nous observons que :
+
+- Les communes avec une **petite population** ont souvent une **diversité faible** (peu de types d'entreprises différents).
+- À mesure que la **population augmente**, la **diversité tend à augmenter** également.
+- Toutefois, il existe une certaine variabilité : certaines **communes très peuplées** n'ont pas une **diversité maximale**
+
+```{r}
+# Scatter Plot avec régression linéaire
+ggplot(data_clean, aes(x = Population, y = Diversity)) +
+  geom_point(color = "darkgreen") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  labs(
+    title = "Population vs Diversité avec Tendance Linéaire",
+    x = "Population Totale",
+    y = "Diversité des Entreprises"
+  ) +
+  theme_minimal() +
+  scale_x_continuous(labels = scales::comma_format()) +  # Formater l'axe des x
+  scale_y_continuous(labels = scales::comma_format())    # Formater l'axe des y
+
+```
+# Interprétation
+
+La **droite de régression** montre une **tendance positive** :
+
+- Plus la **population** augmente, plus la **diversité d'établissements** tend à augmenter.
+
+Cependant :
+
+- Le **nuage de points** reste assez dispersé.
+- La **corrélation** existe, mais elle n'est pas parfaite.
+
+
+# À partir de notre exploration
+
+Il existe une **corrélation positive** entre la **taille de la population** et la **diversité des types d'entreprises**.
+
+Cependant, la relation est **modérée** : d'autres éléments (**attractivité économique**, **spécialisation industrielle**, **urbanisation**, etc.) pourraient expliquer la diversité observée.
+
+# Source des données
+
+Les données utilisées dans cette analyse proviennent de la source suivante :  
+**[Lien vers le dataset sur Kaggle](https://www.kaggle.com/datasets/etiennelq/french-employment-by-town)**
