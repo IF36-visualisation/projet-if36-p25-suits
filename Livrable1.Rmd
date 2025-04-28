@@ -1,0 +1,111 @@
+---
+title: "Phase 1-IF36"
+author: "Patrice MBANGUE, Patricia NOTOUM TAMKO,Dora NGUEMO KAMWOUA, Samella LEUKOUO"
+date: "2025-04-23"
+output: html_document
+---
+
+# Introduction
+
+Dans le cadre de notre projet de dataViz, notre équipe Suits a choisi d'explorer les données socio-économiques françaises afin de mettre en lumière les inégalités en matière d'emploi, de salaires et de de démographie. Notre objectif est d'offrir une analyse approfondie des disparités entre les différentes villes françaises en nous basant sur des données officielles fournies par l'INSEE (Institut National de la Statistique et des Etudes économiques). Notre étude reposera sur quatre fichiers de données, chacun apportant un éclairage spécifique sur les disparités observées en France :
+
+# Description du jeux de données
+
+| Nom du fichier                                | Description                                                                                                                                             |
+|---------------------------------------|--------------------------------|
+| `base_etablissement_par_tranche_effectif.csv` | Contient le nombre d’entreprises par commune française, classées selon leur taille. Permet d’analyser la répartition des entreprises sur le territoire. |
+| `name_geographic_information.csv`             | Fournit des informations géographiques détaillées sur chaque ville (latitude, longitude, codes et noms des régions et départements).                    |
+| `net_salary_per_town_per_category.csv`        | Présente les niveaux de salaires selon la ville, la catégorie professionnelle, l’âge et le sexe. Permet d'évaluer les inégalités salariales en France.  |
+| `population.csv`                              | Contient des données démographiques par commune, incluant l’âge, le sexe et le mode de vie des habitants.                                               |
+
+En croisant ces différentes sources de données, nous visons à :
+
+-   Identifier les inégalités économiques et démographiques entre les territoires français.
+-   Analyser la répartition des entreprises et son impact sur l'emploi et les salaires.
+-   Mettre en évidence les écarts salariaux en fonction de l’âge, du sexe et de la catégorie professionnelle.
+-   Avoir une vision claire de ce qui se passe dans les différentes régions pour mieux comprendre les problèmes liés aux inégalités entre les territoires.
+
+# Questions
+
+## 2. Question : Comment les salaires varient-ils en fonction des catégories professionnelles et du sexe ?
+
+Cette question explore les disparités de genre au sein de chaque catégorie, en utilisant les variables SNHMFC14, SNHMFP14, SNHMFE14 et SNHMFO14 pour les femmes, pour les hommes : SNHMHC14, SNHMHP14, SNHMHE14 et SNHMHO14 et pour l'ensemble SNHMC14, SNHMP14, SNHME14, SNHMO14. L’objectif est de comparer les rémunérations par sexe pour un même poste à l’aide d’histogrammes groupés, afin de mettre en lumière les écarts de salaire. Nous souhaitons ainsi démontrer que les femmes perçoivent souvent des salaires inférieurs à ceux des hommes, y compris à poste équivalent comme le montre l'etude de l'INSEE "Le revenu salarial s’établit à 20 670 euros en moyenne en 2014" https://www.insee.fr/fr/statistiques/2560524#.
+
+### Visualisation : Salaire moyen par catégorie professionnelle et par sexe
+
+```{r}
+# Charger les packages nécessaires
+# Charger les packages nécessaires
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Importer les données depuis le fichier CSV
+salaire_ville <- read.csv("E:/P25/net_salary_per_town_categories.csv", sep = ",", encoding = "UTF-8")
+
+# Sélectionner les colonnes utiles pour l'analyse :
+# - Salaires par catégorie et par sexe
+# - Salaires pour l'ensemble (hommes + femmes)
+salaire_sexe <- salaire_ville %>%
+  select(CODGEO, LIBGEO, 
+         SNHMFC14, SNHMFP14, SNHMFE14, SNHMFO14,  # Femmes
+         SNHMHC14, SNHMHP14, SNHMHE14, SNHMHO14,  # Hommes
+         SNHMC14, SNHMP14, SNHME14, SNHMO14       # Ensemble (hommes + femmes)
+  ) %>%
+  # Conversion de toutes les variables sélectionnées en numérique
+  mutate(across(everything(), as.numeric)) %>%
+  
+  # Passage du format large au format long pour faciliter l'analyse
+  pivot_longer(
+    cols = -c(CODGEO, LIBGEO),
+    names_to = "Categorie_Sexe",
+    values_to = "Salaire"
+  ) %>%
+  
+  # Création de deux colonnes : Sexe et Catégorie professionnelle
+  mutate(
+    Sexe = case_when(
+      grepl("^SNHMF", Categorie_Sexe) ~ "Femme",
+      grepl("^SNHMH", Categorie_Sexe) ~ "Homme",
+      grepl("^SNHMC|^SNHMP|^SNHME|^SNHMO", Categorie_Sexe) ~ "Ensemble",
+      TRUE ~ NA_character_
+    ),
+    Categorie = case_when(
+      grepl("C14$", Categorie_Sexe) ~ "Cadres",
+      grepl("P14$", Categorie_Sexe) ~ "Prof. intermédiaires",
+      grepl("E14$", Categorie_Sexe) ~ "Employés",
+      grepl("O14$", Categorie_Sexe) ~ "Ouvriers",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  
+  # Suppression des lignes incomplètes
+  filter(!is.na(Categorie) & !is.na(Sexe))
+
+# Calcul de la moyenne du salaire horaire par catégorie et par sexe
+salaire_moyen_sexe <- salaire_sexe %>%
+  group_by(Categorie, Sexe) %>%
+  summarise(Salaire_Moyen = mean(Salaire, na.rm = TRUE)) %>%
+  ungroup()
+
+# Création du graphique : histogramme groupé par catégorie et par sexe
+ggplot(salaire_moyen_sexe, aes(x = Categorie, y = Salaire_Moyen, fill = Sexe)) +
+  geom_bar(position = "dodge", stat = "identity") +  # Barres côte à côte
+  geom_text(aes(label = round(Salaire_Moyen, 1)),    # Affichage des valeurs sur les barres
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5, size = 3.5) +
+  labs(
+    title = "Salaire net horaire moyen par catégorie professionnelle et par sexe",
+    x = "Catégorie professionnelle",
+    y = "Salaire net horaire moyen (€)", 
+    caption = "Source : net_salary_per_town_categories.csv" 
+  ) +
+  scale_fill_manual(values = c("#4E79A7", "#F28E2B", "#59A14F")) +  # Couleurs distinctes
+  theme_minimal()
+
+
+```
+
+### Analyse
+
+Le graphique ci-dessus met en évidence des disparités salariales importantes selon la catégorie professionnelle et le sexe. De manière générale, les cadres perçoivent les salaires les plus élevés, suivis par les professions intermédiaires, puis les employés et enfin les ouvriers. Quelle que soit la catégorie, les hommes ont systématiquement un salaire net horaire moyen supérieur à celui des femmes, confirmant l’existence d’une inégalité salariale entre les sexes de. L’écart est particulièrement marqué chez les cadres et les ouvriers, tandis qu’il est légèrement moins prononcé chez les employés et les professions intermédiaires. Ces observations sont cohérentes avec les tendances mises en avant par l'etude de l'INSEE "Le revenu salarial s’établit à 20 670 euros en moyenne en 2014" https://www.insee.fr/fr/statistiques/2560524#, qui souligne à la fois la hiérarchie salariale entre les statuts professionnels et la persistance des écarts hommes-femmes.
