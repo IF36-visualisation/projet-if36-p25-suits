@@ -263,71 +263,78 @@ Avec cette visualisation nous pouvons nettement voir amélioration comparé à l
 - Vers l'article publié par Tatamo : https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/
 
 
-## Question : Existe-t-il une relation entre la population totale d'une région et la diversité des tailles d'entreprises qu'elle héberge ?
 
-Les régions les plus denses en population sont-elles aussi les plus diversifiées en termes de types d’entreprises ? Cette analyse vise à explorer la corrélation entre la taille de la population (variable : population totale, E14TS*) et la diversité entrepreneuriale (variable : nombre de classes d’effectifs d’entreprises présentes parmi les 8 classes recensées dans E14TS*). Pour répondre à cette question, nous utiliserons exclusivement un scatter plot, qui permettra de visualiser simplement la relation entre ces deux dimensions. L’hypothèse de départ est que plus la population est élevée, plus la diversité des entreprises sera importante, car une population nombreuse génère une demande variée. Toutefois, nous nous attendons aussi à trouver des cas où certaines régions très denses ne sont pas représentées par les classes d’entreprises de plus grande taille : cela pourrait s’expliquer par une spécialisation économique (par exemple, une forte concentration résidentielle sans présence significative d’industries ou de grandes entreprises). L’analyse devra ainsi permettre d’observer la tendance générale tout en identifiant d’éventuelles exceptions à cette corrélation.
+## Question : Les communes avec une forte proportion de grandes entreprises offrent-elles un salaire moyen plus élevé ?
 
-### Visualisation
+Pour répondre à la question, nous avons d'abord calculé, pour chaque commune, la proportion d'établissements de grande taille (E14TS100, E14TS200, E14TS500) par rapport au nombre total d'établissements (E14TST). Ensuite, nous avons joint ces données au fichier des salaires (net_salary_per_town_categories.csv), en prenant pour indicateur principal le salaire net horaire moyen (SNHM14).
+
+### Visualisation : 
+
 ```{r}
-# Chargement interactif des données
-entreprises <- read.csv(file.choose(), sep = ",", encoding = "UTF-8")
-population <- read.csv("E:/P25/population.csv", sep = ",", encoding = "UTF-8")
-# Calcul du nombre de classes non nulles par commune
-entreprises_prepared_full <- entreprises %>%
-  mutate(
-    nb_classes_non_nulles = (E14TS1 > 0) + (E14TS6 > 0) + (E14TS10 > 0) +
-                            (E14TS20 > 0) + (E14TS50 > 0) + (E14TS100 > 0) +
-                            (E14TS200 > 0) + (E14TS500 > 0)
-  ) %>%
-  select(CODGEO, REG, nb_classes_non_nulles)
 
-# Assurer que la table population_commune est prête
-population_commune <- population %>%
+# Chargement des librairies nécessaires
+library(tidyverse)
+library(readr)
+library(sf)
+library(ggplot2)
+library(broom)
+
+# Lecture des fichiers CSV
+setwd("C:/Users/samel/Downloads/French employment_ salaries_ population per town")
+
+
+population <- read_csv("population.csv")
+salary <- read_csv("net_salary_per_town_categories.csv")
+entreprises <- read_csv("base_etablissement_par_tranche_effectif.csv")
+geo_info <- read_csv("name_geographic_information.csv")
+
+# preparation des donnée
+entreprises_grandes <- entreprises %>%
+  mutate(grandes_entreprises = E14TS100 + E14TS200 + E14TS500,
+         total_entreprises = E14TST,
+         proportion_grandes = ifelse(total_entreprises > 0, grandes_entreprises / total_entreprises, 0)) %>%
+  select(CODGEO, proportion_grandes, grandes_entreprises, total_entreprises)
+
+# Nettoyage du fichier salaire
+salaire_ville <- salary %>%
+  select(CODGEO, SNHM14) %>%  # Salaire net moyen
+  filter(!is.na(SNHM14))
+ 
+# jointure de salaire et entreprise
+data_combine <- salaire_ville %>%
+  inner_join(entreprises_grandes, by = "CODGEO")
+
+
+# Ajout de la population totale (contrôle du biais de taille de commune)
+population_totale <- population %>%
   group_by(CODGEO) %>%
-  summarise(Population = sum(NB, na.rm = TRUE))
+  summarise(pop_total = sum(NB, na.rm = TRUE))
 
-# Fusion avec les données de population
-fusion_full <- entreprises_prepared_full %>%
-  inner_join(population_commune, by = "CODGEO")
+data_combine <- data_combine %>%
+  left_join(population_totale, by = "CODGEO") %>%
+  filter(!is.na(pop_total))
 
-# Résumé par région
-region_summary_full <- fusion_full %>%
-  group_by(REG) %>%
-  summarise(
-    Total_Population = sum(Population, na.rm = TRUE),
-    Diversite_moyenne = mean(nb_classes_non_nulles, na.rm = TRUE)
-  )
-
-# Scatter plot
-ggplot(region_summary_full, aes(x = Total_Population, y = Diversite_moyenne, size = Diversite_moyenne)) +
-  geom_point(color = "darkorange", alpha = 0.7) +
-  geom_text(aes(label = REG), vjust = -1, hjust = 0.5, size = 3.5) +
-  scale_x_log10(labels = comma) +
+#Visualisation : Scatter Plot avec régression
+ggplot(data_combine, aes(x = proportion_grandes, y = SNHM14)) +
+  geom_point(aes(size = pop_total), alpha = 0.6, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "darkred") +
   labs(
-    title = "Population vs Diversité des Classes d'Entreprises",
-    x = "Population totale (échelle log)",
-    y = "Diversité moyenne des entreprises"
+    title = "Relation entre proportion de grandes entreprises et salaire net moyen",
+    x = "Proportion de grandes entreprises dans la commune",
+    y = "Salaire net moyen (en milliers d'euros)",
+    size = "Population totale"
   ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12)
-  )
+  theme_minimal()
 
 ```
 
-### Analyse
+### Analyse de la visualisation
+La courbe nous presente:
+- **Tendance générale** : la courbe de régression montre que une relation linéaire existe. Une **pente positive** indiquerait qu’à mesure que la proportion de grandes entreprises augmente dans une commune, les salaires moyens tendent à augmenter également.
 
-À partir du graphique obtenu, plusieurs observations peuvent être faites :
+- **Taille des bulles** : les **grandes villes peuvent biaiser l’analyse**. Cette visualisation permet de contrôler visuellement ce biais.
 
-- Les régions les moins peuplées (situées à gauche du graphique) tendent à présenter une diversité plus faible de types d'entreprises, souvent entre 1 et 3 classes d'établissements.
-- À mesure que la population augmente, on observe globalement une diversification accrue, bien que ce ne soit pas systématique.
-- Certaines régions très peuplées (ex : région 11) affichent une diversité plus élevée, tandis que d'autres régions intermédiaires en population (ex : régions 82, 93) présentent une diversité moyenne.
-- Le nuage de points montre une tendance générale, mais également une forte dispersion : la population seule n'explique donc pas totalement la diversité économique.
-- La transformation logarithmique de l'axe des abscisses (Population totale) améliore considérablement la lisibilité des écarts entre petites et grandes régions.
+- **Points dispersés** : si la dispersion est forte, cela signifie que **la proportion de grandes entreprises n’est pas le seul facteur explicatif du salaire** (d’autres facteurs sont en jeu : niveau de vie régional, densité, qualification...).
 
-Ainsi, même si la population semble être un facteur favorisant la diversité, d'autres éléments (économie locale, spécialisation sectorielle, urbanisation) doivent aussi être pris en compte pour expliquer les écarts observés.
-
-
+Nous pouvons alors constacter que si la pente est significativement positive, alors il existe une **corrélation** entre une forte présence de grandes entreprises et des salaires plus élevés. Mais , **la causalité n’est pas certaine** : cette relation pourrait aussi s'expliquer par la population active ou l’effet métropole.
 
