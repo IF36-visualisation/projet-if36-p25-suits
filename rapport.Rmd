@@ -273,73 +273,67 @@ Pour répondre à la question, nous avons d'abord calculé, pour chaque commune,
 ```{r}
 
 # Chargement des librairies nécessaires
+```{r}
 library(tidyverse)
 library(readr)
-library(sf)
 library(ggplot2)
-library(broom)
 
-# Lecture des fichiers CSV
+
 setwd("C:/Users/samel/Downloads/French employment_ salaries_ population per town")
-
 
 population <- read_csv("population.csv")
 salary <- read_csv("net_salary_per_town_categories.csv")
 entreprises <- read_csv("base_etablissement_par_tranche_effectif.csv")
-geo_info <- read_csv("name_geographic_information.csv")
 
-# preparation des donnée
-entreprises_grandes <- entreprises %>%
-  mutate(grandes_entreprises = E14TS100 + E14TS200 + E14TS500,
-         total_entreprises = E14TST,
-         proportion_grandes = ifelse(total_entreprises > 0, grandes_entreprises / total_entreprises, 0)) %>%
-  select(CODGEO, proportion_grandes, grandes_entreprises, total_entreprises)
-
-# Nettoyage du fichier salaire
-salaire_ville <- salary %>%
-  select(CODGEO, SNHM14) %>%  # Salaire net moyen
-  filter(!is.na(SNHM14))
- 
-# jointure de salaire et entreprise
-data_combine <- salaire_ville %>%
-  inner_join(entreprises_grandes, by = "CODGEO")
-
-
-# Ajout de la population totale (contrôle du biais de taille de commune)
-population_totale <- population %>%
+# Population par commune
+pop_commune <- population %>%
   group_by(CODGEO) %>%
-  summarise(pop_total = sum(NB, na.rm = TRUE))
+  summarise(pop_total = sum(NB))
 
-data_combine <- data_combine %>%
-  left_join(population_totale, by = "CODGEO") %>%
-  filter(!is.na(pop_total))
+# Proportion de grandes entreprises
+entreprises_summarise <- entreprises %>%
+  mutate(nb_total = rowSums(select(., starts_with("E14TS"))),
+         nb_grandes = E14TS100 + E14TS200 + E14TS500,
+         proportion_grandes = nb_grandes / nb_total) %>%
+  select(CODGEO, proportion_grandes)
 
-#Visualisation : Scatter Plot avec régression
-ggplot(data_combine, aes(x = proportion_grandes, y = SNHM14)) +
-  geom_point(aes(size = pop_total), alpha = 0.6, color = "steelblue") +
-  geom_smooth(method = "lm", se = TRUE, color = "darkred") +
+# Fusion des données
+data_combine <- salary %>%
+  select(CODGEO, SNHM14) %>%
+  left_join(entreprises_summarise, by = "CODGEO") %>%
+  left_join(pop_commune, by = "CODGEO") %>%
+  drop_na()
+
+
+ggplot(data_combine, aes(x = proportion_grandes, y = SNHM14, size = pop_total)) +
+  geom_point(alpha = 0.6, aes(color = pop_total)) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkred", size = 1) +
+  scale_color_gradient(low = "lightblue", high = "darkblue", name = "Population") +
+  scale_size(range = c(1, 10), name = "Population totale") +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 0.1)) +
   labs(
-    title = "Relation entre proportion de grandes entreprises et salaire net moyen",
-    x = "Proportion de grandes entreprises dans la commune",
-    y = "Salaire net moyen (en milliers d'euros)",
-    size = "Population totale"
+    title = "Proportion de grandes entreprises vs. Salaire net moyen",
+    subtitle = "Taille et couleur des points représentent la population communale",
+    x = "Proportion de grandes entreprises",
+    y = "Salaire net moyen (en milliers d'euros)"
   ) +
-  theme_minimal()
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
 
 ```
 
 ### Analyse de la visualisation
-La courbe nous presente:
-- **Tendance générale** : la courbe de régression montre que une relation linéaire existe. Une **pente positive** indiquerait qu’à mesure que la proportion de grandes entreprises augmente dans une commune, les salaires moyens tendent à augmenter également.
 
-- **Taille des bulles** : les **grandes villes peuvent biaiser l’analyse**. Cette visualisation permet de contrôler visuellement ce biais.
+Pour répondre à cette question, nous avons visualisé la relation entre la proportion de grandes entreprises et le salaire net moyen par commune, avec une ligne de régression pour détecter une tendance.
 
-- **Points dispersés** : si la dispersion est forte, cela signifie que **la proportion de grandes entreprises n’est pas le seul facteur explicatif du salaire** (d’autres facteurs sont en jeu : niveau de vie régional, densité, qualification...).
+Le graphique montre que **la plupart des communes ont très peu de grandes entreprises**, et **la pente presque plate de la courbe de régression indique qu’il n’y a pas de lien clair entre leur présence et un salaire plus élevé**. De plus, **les grandes villes (points plus gros) n’ont pas forcément les salaires les plus hauts**, ce qui suggère que **d’autres facteurs influencent le salaire, comme le niveau de vie ou l’activité économique locale**.
 
-Nous pouvons alors constacter que si la pente est significativement positive, alors il existe une **corrélation** entre une forte présence de grandes entreprises et des salaires plus élevés. Mais , **la causalité n’est pas certaine** : cette relation pourrait aussi s'expliquer par la population active ou l’effet métropole.
 
-sources: -net_salary_per_town_categories.csv
-         -name_geographic_information.csv 
+
+sources: -net_salary_per_town_categories.csv 
          -base_etablissement_par_tranche.csv
          -population.csv
 
