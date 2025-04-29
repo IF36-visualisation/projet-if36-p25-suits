@@ -338,3 +338,8 @@ La courbe nous presente:
 
 Nous pouvons alors constacter que si la pente est significativement positive, alors il existe une **corrélation** entre une forte présence de grandes entreprises et des salaires plus élevés. Mais , **la causalité n’est pas certaine** : cette relation pourrait aussi s'expliquer par la population active ou l’effet métropole.
 
+sources: -net_salary_per_town_categories.csv
+         -name_geographic_information.csv 
+         -base_etablissement_par_tranche.csv
+         -population.csv
+
