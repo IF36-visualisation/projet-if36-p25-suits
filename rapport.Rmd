@@ -304,7 +304,7 @@ data_combine <- salary %>%
   left_join(pop_commune, by = "CODGEO") %>%
   drop_na()
 
-
+#Visualisation : Scatter Plot avec régression
 ggplot(data_combine, aes(x = proportion_grandes, y = SNHM14, size = pop_total)) +
   geom_point(alpha = 0.6, aes(color = pop_total)) +
   geom_smooth(method = "lm", se = TRUE, color = "darkred", size = 1) +
