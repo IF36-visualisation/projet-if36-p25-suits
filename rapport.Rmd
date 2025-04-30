@@ -266,71 +266,61 @@ Avec cette visualisation nous pouvons nettement voir amélioration comparé à l
 
 ## Question : Les communes avec une forte proportion de grandes entreprises offrent-elles un salaire moyen plus élevé ?
 
-Pour répondre à la question, nous avons d'abord calculé, pour chaque commune, la proportion d'établissements de grande taille (E14TS100, E14TS200, E14TS500) par rapport au nombre total d'établissements (E14TST). Ensuite, nous avons joint ces données au fichier des salaires (net_salary_per_town_categories.csv), en prenant pour indicateur principal le salaire net horaire moyen (SNHM14).
+Pour répondre à la question, nous avons calculé la proportion de grandes entreprises dans chaque commune en divisant le nombre d’établissements de grande taille (`E14TS100`, `E14TS200`, `E14TS500`) par le total des établissements (`E14TST`). Nous avons ensuite fusionné ce résultat avec les données sur les salaires moyens (`SNHM14`) issues du fichier `net_salary_per_town_categories.csv`.
 
-### Visualisation : 
+
+### Visualisation :lien entre propotion de grandes Entreprise et salais moyen
 
 ```{r}
 
-# Chargement des librairies nécessaires
-```{r}
 library(tidyverse)
 library(readr)
 library(ggplot2)
 
-
-setwd("C:/Users/samel/Downloads/French employment_ salaries_ population per town")
-
-population <- read_csv("population.csv")
+# Charger les données
+etab <- read_csv("base_etablissement_par_tranche_effectif.csv")
 salary <- read_csv("net_salary_per_town_categories.csv")
-entreprises <- read_csv("base_etablissement_par_tranche_effectif.csv")
+population <- read_csv("population.csv")
 
-# Population par commune
-pop_commune <- population %>%
-  group_by(CODGEO) %>%
-  summarise(pop_total = sum(NB))
+# Sélection et calcul du nombre de grandes entreprises
+etab_grandes <- etab %>%
+  mutate(nb_grandes = E14TS100 + E14TS200 + E14TS500) %>%
+  select(CODGEO, LIBGEO, nb_grandes, E14TST)
 
-# Proportion de grandes entreprises
-entreprises_summarise <- entreprises %>%
-  mutate(nb_total = rowSums(select(., starts_with("E14TS"))),
-         nb_grandes = E14TS100 + E14TS200 + E14TS500,
-         proportion_grandes = nb_grandes / nb_total) %>%
-  select(CODGEO, proportion_grandes)
+# Calcul de la proportion de grandes entreprises
+etab_grandes <- etab_grandes %>%
+  mutate(prop_grandes = nb_grandes / E14TST)
+
+# Sélection du salaire moyen
+salaire_moyen <- salary %>%
+  select(CODGEO, SNHM14)
 
 # Fusion des données
-data_combine <- salary %>%
-  select(CODGEO, SNHM14) %>%
-  left_join(entreprises_summarise, by = "CODGEO") %>%
-  left_join(pop_commune, by = "CODGEO") %>%
-  drop_na()
+df <- etab_grandes %>%
+  inner_join(salaire_moyen, by = "CODGEO") %>%
+  filter(!is.na(SNHM14), !is.na(prop_grandes))
 
-#Visualisation : Scatter Plot avec régression
-ggplot(data_combine, aes(x = proportion_grandes, y = SNHM14, size = pop_total)) +
-  geom_point(alpha = 0.6, aes(color = pop_total)) +
-  geom_smooth(method = "lm", se = TRUE, color = "darkred", size = 1) +
-  scale_color_gradient(low = "lightblue", high = "darkblue", name = "Population") +
-  scale_size(range = c(1, 10), name = "Population totale") +
-  scale_x_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+ggplot(df, aes(y = prop_grandes, x = SNHM14)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "darkred") +
   labs(
-    title = "Proportion de grandes entreprises vs. Salaire net moyen",
-    subtitle = "Taille et couleur des points représentent la population communale",
-    x = "Proportion de grandes entreprises",
-    y = "Salaire net moyen (en milliers d'euros)"
+    title = "Lien entre proportion de grandes entreprises et salaire moyen",
+     x = "Salaire net moyen (en milliers euros)",
+    y = "Proportion de grandes entreprises"
+   
   ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.title = element_text(face = "bold"),
-    legend.position = "right"
-  )
+  theme_minimal()
 
 ```
 
+
 ### Analyse de la visualisation
 
-Pour répondre à cette question, nous avons visualisé la relation entre la proportion de grandes entreprises et le salaire net moyen par commune, avec une ligne de régression pour détecter une tendance.
 
-Le graphique montre que **la plupart des communes ont très peu de grandes entreprises**, et **la pente presque plate de la courbe de régression indique qu’il n’y a pas de lien clair entre leur présence et un salaire plus élevé**. De plus, **les grandes villes (points plus gros) n’ont pas forcément les salaires les plus hauts**, ce qui suggère que **d’autres facteurs influencent le salaire, comme le niveau de vie ou l’activité économique locale**.
+Ce graphique analyse le lien entre la proportion de grandes entreprises (axe Y) et le salaire net moyen par commune (axe X). On observe que la majorité des communes ont une proportion très faible de grandes entreprises (c’est-à-dire ayant plus de 100 salariés), et pourtant, les salaires y varient fortement(Les points sont dispersés) ,la ligne de régression étant quasiment horizontale, on en conclut qu’il n’existe **pas de relation linéaire forte** entre la proportion de grandes entreprises et le salaire net moyen donc, Même avec une proportion plus élevée de grandes entreprises, le salaire n’augmente pas de manière significative.
 
+EN conclusion 
+Contrairement à l’hypothèse initiale, **le graphique ne montre pas de lien clair ou fort entre la proportion de grandes entreprises et les salaires moyens des communes**. Cela peut s’expliquer par d’autres facteurs (comme le type d’activité, la localisation géographique, le coût de la vie,...) semblent jouer un rôle plus important
 
 
 sources: -net_salary_per_town_categories.csv 
