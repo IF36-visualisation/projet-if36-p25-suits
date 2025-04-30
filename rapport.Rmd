@@ -319,7 +319,7 @@ ggplot(df, aes(y = prop_grandes, x = SNHM14)) +
 
 Ce graphique analyse le lien entre la proportion de grandes entreprises (axe Y) et le salaire net moyen par commune (axe X). On observe que la majorité des communes ont une proportion très faible de grandes entreprises (c’est-à-dire ayant moin de 100 salariés), et pourtant, les salaires y varient fortement(Les points sont dispersés) ,la ligne de régression étant quasiment horizontale, on en conclut qu’il n’existe **pas de relation linéaire forte** entre la proportion de grandes entreprises et le salaire net moyen donc, Même avec une proportion plus élevée de grandes entreprises, le salaire n’augmente pas de manière significative.
 
-EN conclusion 
+Conclusion 
 Contrairement à l’hypothèse initiale, **le graphique ne montre pas de lien clair entre la proportion de grandes entreprises et les salaires moyens des communes**. Cela peut s’expliquer par d’autres facteurs (comme le type d’activité, la localisation géographique, le niveau d’études, le coût de la vie,...) semblent jouer un rôle plus important.
 
 
