@@ -37,7 +37,19 @@ dashboardPage(
                   width = 12,
                   plotlyOutput("carteSalaire")
                   
+                ),
+                box(
+                  title = "Salaire moyen par catégorie professionnelle et par sexe",
+                  width = 12,
+                  plotlyOutput("salaireSexePlot")
+                ),
+                box(
+                  title = "Répartition des modes de cohabitation par région",
+                  width = 12,
+                  plotlyOutput("cohabitationPlot")
                 )
+                
+                
               )
       )
     )
