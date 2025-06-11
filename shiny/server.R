@@ -4,11 +4,35 @@ library(dplyr)
 library(tidyverse)
 library(sf)
 
+# Chargement de données
 geography <- read_csv("C:/Users/HP/Documents/IF36/name_geographic_information.csv")
 industry <- read_csv("C:/Users/HP/Documents/IF36/base_etablissement_par_tranche_effectif.csv")
 data_salaire <- read.csv("https://raw.githubusercontent.com/IF36-visualisation/projet-if36-p25-suits/5e0d441fe53b18baec17d36aeb06b9799c450df2/data/net_salary_per_town_categories.csv")
 population <- read.csv("E:/P25/population.csv")
 
+# Chargement des données
+population <- read_csv("population.csv")
+salary <- read_csv("net_salary_per_town_categories.csv")
+entreprises <- read_csv("base_etablissement_par_tranche_effectif.csv")
+
+# Préparation des données
+pop_commune <- population %>%
+  group_by(CODGEO) %>%
+  summarise(pop_total = sum(NB, na.rm = TRUE))
+
+entreprises_summarise <- entreprises %>%
+  mutate(nb_total = rowSums(select(., starts_with("E14TS")), na.rm = TRUE),
+         nb_grandes = rowSums(select(., E14TS100, E14TS200, E14TS500), na.rm = TRUE),
+         proportion_grandes = nb_grandes / nb_total) %>%
+  select(CODGEO, proportion_grandes)
+
+data_combine <- salary %>%
+  select(CODGEO, SNHM14) %>%
+  left_join(entreprises_summarise, by = "CODGEO") %>%
+  left_join(pop_commune, by = "CODGEO") %>%
+  drop_na()
+
+# initialisation du serveur 
 server <- function(input, output, session) {
   
   output$distPlot <- renderPlot({
@@ -217,6 +241,22 @@ server <- function(input, output, session) {
     ggplotly(graph)
   })
   # --------------------------------------------------------------------------------
+
+  output$samella <- renderPlot({
+    ggplot(data_combine, aes(y = proportion_grandes, x = SNHM14, size = pop_total)) +
+      geom_point(alpha = 0.6, aes(color = pop_total)) +
+      geom_smooth(method = "lm", se = TRUE, color = "darkred", size = 1) +
+      scale_color_gradient(low = "lightblue", high = "darkblue", name = "Population") +
+      labs(
+        title = "Proportion de grandes entreprises vs. Salaire net moyen",
+        subtitle = "Taille et couleur des points représentent la population communale",
+        x = "Salaire net moyen (en milliers d'euros)",
+        y = "Proportion de grandes entreprises"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(plot.title = element_text(face = "bold"))
+  })
+
   
   
 }
