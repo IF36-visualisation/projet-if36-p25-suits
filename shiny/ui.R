@@ -47,9 +47,13 @@ dashboardPage(
                   title = "Répartition des modes de cohabitation par région",
                   width = 12,
                   plotlyOutput("cohabitationPlot")
-                )
-                
-                
+                ),
+                box(title = "Graphique",
+                    status = "primary", 
+                    solidHeader = TRUE,
+                    plotOutput("samella", height = 300)
+                   )
+            
               )
       )
     )
