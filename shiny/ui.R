@@ -48,11 +48,11 @@ dashboardPage(
                   width = 12,
                   plotlyOutput("cohabitationPlot")
                 ),
-                box(title = "Graphique",
-                    status = "primary", 
-                    solidHeader = TRUE,
-                    plotOutput("samella", height = 300)
-                   )
+                box(
+                  title = "Proportion de grandes entreprises et salaire net moyen ",
+                  width= 12,
+                  plotOutput("samella", height = 300)
+                )
             
               )
       )
