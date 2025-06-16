@@ -327,3 +327,149 @@ sources: -net_salary_per_town_categories.csv
          -base_etablissement_par_tranche.csv
          -population.csv
 
+
+
+## Question : Comment le mode de cohabitation influence-t-il la répartition salariale ?
+
+Pour répondre à cette question, nous avons analysé l’impact des différents modes de cohabitation (familles biparentales, monoparentales, couples avec enfants, etc...) sur le niveau des salaires nets moyens dans les communes françaises. Les données utilisées proviennent des fichiers `population.csv` (modes de cohabitation) et `net_salary_per_town_categories.csv` (salaires moyens).  
+
+Nous avons calculé la proportion de chaque mode de cohabitation dans chaque commune, en nous concentrant sur les codes 11 (enfants avec deux parents), 12 (enfants avec un seul parent) et 22 (adultes en couple avec enfants). Ces proportions ont été croisées avec le salaire net moyen par commune.
+
+### Visualisation : répartition salariale selon le mode de cohabitation et carte des salaires moyens par commune
+
+```{r}
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(patchwork)
+
+# Définir le chemin d'accès aux fichiers
+data_path <- "C:/Users/samel/Downloads/French employment_ salaries_ population per town/"
+
+# Charger les données
+population <- read.csv(paste0(data_path, "population.csv"), stringsAsFactors = FALSE)
+salaire <- read.csv(paste0(data_path, "net_salary_per_town_categories.csv"), stringsAsFactors = FALSE)
+communes <- st_read(paste0(data_path, "communes.geojson"))
+
+# Identifier la colonne INSEE dans communes
+insee_col <- colnames(communes)[str_detect(tolower(colnames(communes)), "insee|code")][1]
+
+# Calculer la proportion par mode de cohabitation
+moco_summary <- population %>%
+  group_by(CODGEO, MOCO) %>%
+  summarise(total = sum(NB), .groups = "drop") %>%
+  group_by(CODGEO) %>%
+  mutate(prop = total / sum(total)) %>%
+  filter(MOCO %in% c(11, 12, 22))
+
+# Joindre les proportions avec le salaire moyen
+moco_salaire <- moco_summary %>%
+  left_join(salaire %>% select(CODGEO, SNHM14), by = "CODGEO")
+
+# Graphique 1 : boxplot salaire moyen selon mode de cohabitation
+p1 <- ggplot(moco_salaire, aes(x = factor(MOCO), y = SNHM14, fill = factor(MOCO))) +
+  geom_boxplot() +
+  labs(x = "Mode de cohabitation", y = "Salaire net moyen (k€)",
+       title = "Salaire moyen selon le mode de cohabitation") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Joindre communes et salaires
+communes_salaire <- communes %>%
+  left_join(salaire %>% select(CODGEO, SNHM14), by = setNames("CODGEO", insee_col))
+
+# Graphique 2 : carte simplifiée des salaires moyens
+p2 <- ggplot(communes_salaire) +
+  geom_sf(aes(fill = SNHM14), color = NA) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90",
+                      name = "Salaire moyen (k€)") +
+  labs(title = "Salaire moyen par commune en France") +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank()
+  )
+
+# Combiner les graphiques verticalement
+combined_plot <- p1 / p2 + patchwork::plot_layout(heights = c(1, 2))
+
+print(combined_plot)
+
+
+### Analyse de la visualisation
+Le boxplot illustre que le salaire net moyen est assez similaire entre les différents modes de cohabitation, avec une médiane proche autour de 13-14 k€, bien que des écarts importants existent avec des valeurs extrêmes dans chaque catégorie.
+
+La carte révèle une concentration des salaires plus élevés dans les grandes agglomérations (Paris, Lyon, Marseille), indépendamment du mode de cohabitation.
+Ces résultats suggèrent que, comparé à des facteurs territoriaux et économiques, le mode de cohabitation a un impact limité sur la répartition salariale moyenne.
+
+Sources:
+population.csv
+net_salary_per_town_categories.csv
+communes.geojson
+
+
+
+
+## Question 2 : Quel est l’impact de la densité de population sur les salaires et le nombre de PME ?
+
+Pour répondre à cette question, nous avons étudié la relation entre la population totale d’une commune et le nombre de Petites et Moyennes Entreprises (PME) présentes. Les données proviennent des fichiers `population.csv` (population totale), `base_etablissement_par_tranche_effectif.csv` (nombre d’établissements par taille) et `net_salary_per_town_categories.csv` (salaires moyens).
+
+Nous avons calculé la population totale par commune ainsi que le nombre de PME, défini ici comme la somme des entreprises ayant entre 10 et 249 salariés (`E14TS10`, `E14TS20`, `E14TS50`, `E14TS100`, `E14TS200`). Ces données ont été croisées pour analyser l’impact de la densité démographique sur l’activité économique locale.
+
+
+### Visualisation : impact de la population totale sur le nombre de PME
+
+```{r}
+library(tidyverse)
+
+# Définir le chemin d'accès aux fichiers
+data_path <- "C:/Users/samel/Downloads/French employment_ salaries_ population per town/"
+
+# Charger les données
+population <- read.csv(paste0(data_path, "population.csv"), stringsAsFactors = FALSE)
+salaire <- read.csv(paste0(data_path, "net_salary_per_town_categories.csv"), stringsAsFactors = FALSE)
+etablissements <- read.csv(paste0(data_path, "base_etablissement_par_tranche_effectif.csv"), stringsAsFactors = FALSE)
+
+# Calculer la population totale par commune
+pop_totale <- population %>%
+  group_by(CODGEO) %>%
+  summarise(population_totale = sum(NB))
+
+# Calculer nombre de PME par commune
+etablissements <- etablissements %>%
+  mutate(
+    PME = E14TS10 + E14TS20 + E14TS50 + E14TS100 + E14TS200
+  ) %>%
+  select(CODGEO, PME)
+
+# Joindre population, salaire et PME
+df <- pop_totale %>%
+  left_join(salaire %>% select(CODGEO, SNHM14), by = "CODGEO") %>%
+  left_join(etablissements, by = "CODGEO")
+
+# Scatter plot population totale vs nombre de PME avec zoom
+ggplot(df, aes(x = population_totale, y = PME)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkgreen") +
+  labs(title = "Impact de la population totale sur le nombre de PME",
+       x = "Population totale par commune",
+       y = "Nombre de PME") +
+  coord_cartesian(xlim = c(0, 1e6), ylim = c(0, 7500)) +
+  theme_minimal()
+
+
+### Analyse de la visualisation
+
+Le graphique montre une forte corrélation positive entre la population totale d’une commune et le nombre de PME qu’elle accueille. Plus la population est élevée, plus le nombre de PME tend à augmenter, ce qui reflète une dynamique économique plus importante dans les communes densément peuplées.
+
+La droite de régression confirme cette tendance linéaire, suggérant que la densité démographique est un facteur clé dans le développement des entreprises locales.
+
+Sources
+population.csv
+
+base_etablissement_par_tranche_effectif.csv
+
+net_salary_per_town_categories.csv
+
