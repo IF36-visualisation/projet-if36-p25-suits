@@ -235,10 +235,27 @@ Nous pensons que les grandes entreprises influencent positivement les salaires, 
 
 ---
 
-### La structure d’âge d’une commune influence-t-elle la taille moyenne des entreprises qui s’y installent ?
-Les variables concernées seront extraites de `population.csv` (tranches d’âge) et des tranches d'effectif d'entreprises **E14TS**.  
-L’objectif est de tester une **relation entre population active et type d'entreprises**. Les types de visualisation envisagés sont donc : **un scatter plot**, **une matrice de corrélation**.  
-Une difficulté pourrait être le manque de données fines sur les âges exacts des travailleurs.
+### Analyse du mode de cohabitation et répartition salariale
+
+Cette analyse examine l’impact des différentes formes de cohabitation (familles biparentales, monoparentales, couples avec enfants, personnes seules, etc.) sur le niveau des salaires moyens dans les communes françaises. Les variables mobilisées proviennent des fichiers `population.csv` (mode de cohabitation) et `net_salary_per_town_per_category.csv` (salaires moyens). L’étude combine des bar charts et des cartes pour visualiser les disparités géographiques et sociales.
+
+Selon plusieurs études sociologiques, les configurations familiales influencent la situation économique des ménages : les familles monoparentales ou les personnes seules sont souvent plus exposées à des revenus plus faibles. Cette analyse vise donc à mettre en lumière ces inégalités salariales liées au mode de vie.
+
+---
+
+### Comment le mode de cohabitation influence-t-il la répartition salariale ?
+
+Cette analyse examine l’impact des différentes formes de cohabitation (familles biparentales, monoparentales, couples avec enfants, personnes seules, etc.) sur le niveau des salaires moyens dans les communes françaises. Les variables mobilisées proviennent des fichiers 'population.csv' (mode de cohabitation) et 'net_salary_per_town_per_category.csv' (salaires moyens). L’étude combine des **bar charts et des cartes** pour visualiser les disparités géographiques et sociales.
+
+Selon plusieurs études sociologiques, les configurations familiales influencent la situation économique des ménages : les familles monoparentales ou les personnes seules sont souvent plus exposées à des revenus plus faibles. Cette analyse vise donc à mettre en lumière ces inégalités salariales liées au mode de vie.
+
+---
+
+### Quel est l’impact de la densité de population sur les salaires et la structure des entreprises ?
+
+Cette question étudie la relation entre la densité démographique d’une commune et ses indicateurs économiques, notamment le salaire moyen et la présence des entreprises (notamment les PME). Les données utilisées sont issues des fichiers 'population.csv' (population totale), 'net_salary_per_town_per_category.csv' (salaires) et 'base_etablissement_par_tranche_effectif.csv (répartition des entreprises).
+
+L’objectif est de tester l’hypothèse selon laquelle une plus forte densité de population favorise des salaires plus élevés et une économie locale plus dynamique, caractérisée par une diversité et un nombre plus important d’entreprises. Le recours à des **scatter plots avec régression** permet d’illustrer ces relations.
 
 ---
 
