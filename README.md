@@ -237,7 +237,7 @@ Nous pensons que les grandes entreprises influencent positivement les salaires, 
 
 ### Analyse du mode de cohabitation et répartition salariale
 
-Cette analyse examine l’impact des différentes formes de cohabitation (familles biparentales, monoparentales, couples avec enfants, personnes seules, etc.) sur le niveau des salaires moyens dans les communes françaises. Les variables mobilisées proviennent des fichiers `population.csv` (mode de cohabitation) et `net_salary_per_town_per_category.csv` (salaires moyens). L’étude combine des bar charts et des cartes pour visualiser les disparités géographiques et sociales.
+Cette analyse examine l’impact des différentes formes de cohabitation (familles biparentales, monoparentales, couples avec enfants, personnes seules, etc.) sur le niveau des salaires moyens dans les communes françaises. Les variables mobilisées proviennent des fichiers 'population.csv' (mode de cohabitation) et 'net_salary_per_town_per_category.csv' (salaires moyens). L’étude combine des bar charts et des cartes pour visualiser les disparités géographiques et sociales.
 
 Selon plusieurs études sociologiques, les configurations familiales influencent la situation économique des ménages : les familles monoparentales ou les personnes seules sont souvent plus exposées à des revenus plus faibles. Cette analyse vise donc à mettre en lumière ces inégalités salariales liées au mode de vie.
 
