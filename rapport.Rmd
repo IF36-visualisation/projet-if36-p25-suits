@@ -489,3 +489,66 @@ population.csv
 base_etablissement_par_tranche_effectif.csv
 net_salary_per_town_categories.csv
 
+## Question : Existe t-il des régions qui possèdent plus d'entreprises que d'autres ?
+
+Pour répondre à cette question, nous avons décidé de représenter le nombre total d’établissements présents dans chaque région française. Deux types de visualisations sont possibles :
+
+    Une carte de France affichant le nombre d’entreprises par région.
+
+    Un histogramme comparatif permettant de voir rapidement quelles régions comptent le plus d’entreprises.
+
+Avant même de réaliser l’analyse, on peut déjà s’attendre à observer des différences importantes entre les régions. Selon une étude publiée par Statista en 2024, l’Île-de-France reste la région qui regroupe le plus grand nombre d’entreprises en France, avec plus de 2,85 millions de sociétés. Ce résultat s’explique notamment par le poids économique de Paris et sa concentration d’activités.
+
+On anticipe donc que l’Île-de-France occupera la première position dans notre classement, suivie probablement par des régions économiquement dynamiques comme Auvergne-Rhône-Alpes et Provence-Alpes-Côte d’Azur. À l’inverse, des régions plus rurales ou moins peuplées, comme la Corse ou la Bourgogne-Franche-Comté, devraient compter un nombre d’entreprises plus faible.
+
+**source** : https://fr.statista.com/statistiques/1080530/nombre-entreprises-france-selon-region/
+
+### Visualisation 1 : histogramme comparatif du nombre total d'entreprises présentent dans chaque région : 
+```{r}
+# dataset
+geography <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+industry <- read_csv("C:/Users/estel/Downloads/archive/base_etablissement_par_tranche_effectif.csv")
+
+# jointure entre geography et industry
+# remplacer les virgules par des points dans la colonne longitude
+geography$longitude <- str_replace_all(as.character(geography$longitude), ",", ".")
+#Supprimer les lignes où longitude est égale à "-"
+geography <- geography[geography$longitude != "-", ]
+#Supprimer les lignes avec NA dans longitude ou latitude
+geography <- geography %>% drop_na(longitude, latitude)
+#Convertir longitude en numérique
+geography$longitude <- as.numeric(geography$longitude)
+#Supprimer les doublons sur code_insee (garder la première occurrence)
+geography <- geography %>% distinct(code_insee, .keep_all = TRUE)
+# Supprimer les lignes où CODGEO n'est pas un entier
+industry <- industry %>% filter(str_detect(CODGEO, "^\\d+$"))
+# Convertir CODGEO en entier
+industry$CODGEO <- as.integer(industry$CODGEO)
+# Fusionner les deux jeux de données
+merged1 <- merge(geography, industry, by.x = "code_insee", by.y = "CODGEO")
+
+# Calcul du total d'entreprises par région
+entreprises_par_region <- merged1 %>%
+  group_by(nom_région) %>%
+  summarise(total_entreprises = sum(E14TST, na.rm = TRUE)) %>%
+  arrange(desc(total_entreprises))
+
+ggplot(entreprises_par_region, aes(x = reorder(nom_région, total_entreprises), y = total_entreprises)) +
+  geom_bar(stat = "identity", fill = "#4E79A7") +
+  coord_flip() +
+  labs(title = "Nombre total d'entreprises par région",
+       x = "Région",
+       y = "Nombre total d'entreprises") +
+  theme_minimal()
+
+```
+### Analyse de la visualisation
+
+Le graphique met en évidence une répartition très inégale du nombre total d’entreprises sur le territoire français.
+
+* L'Île-de-France se distingue largement des autres régions avec un nombre d’entreprises très supérieur, dépassant le million. Cette situation s’explique par la forte densité de population, la présence de Paris qui concentre de nombreuses activités économiques, de services, de sièges sociaux et de grandes entreprises internationales. C’est également le principal pôle décisionnel, administratif et financier du pays.
+
+* On observe un deuxième groupe composé notamment de Provence-Alpes-Côte d’Azur et Rhône-Alpes, qui affichent également un nombre important d’établissements, mais nettement en-dessous de l’Île-de-France.
+
+* La majorité des autres régions présentent un nombre d’entreprises bien plus modeste. Ce sont souvent des régions à dominante rurale (Limousin, Franche-Comté, Auvergne...).
+
