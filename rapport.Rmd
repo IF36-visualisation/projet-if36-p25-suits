@@ -277,39 +277,54 @@ library(tidyverse)
 library(readr)
 library(ggplot2)
 
-# Charger les données
-etab <- read_csv("base_etablissement_par_tranche_effectif.csv")
-salary <- read_csv("net_salary_per_town_categories.csv")
-population <- read_csv("population.csv")
+# Définir le chemin d'accès aux fichiers
+data_path <- "C:/Users/samel/Downloads/French employment_ salaries_ population per town/"
 
-# Sélection et calcul du nombre de grandes entreprises
+# Charger les données
+etab <- read_csv(paste0(data_path, "base_etablissement_par_tranche_effectif.csv"))
+salary <- read_csv(paste0(data_path, "net_salary_per_town_categories.csv"))
+population <- read_csv(paste0(data_path, "population.csv"))
+
+# Calculer nombre de grandes entreprises
 etab_grandes <- etab %>%
   mutate(nb_grandes = E14TS100 + E14TS200 + E14TS500) %>%
   select(CODGEO, LIBGEO, nb_grandes, E14TST)
 
-# Calcul de la proportion de grandes entreprises
+# Calculer proportion de grandes entreprises
 etab_grandes <- etab_grandes %>%
   mutate(prop_grandes = nb_grandes / E14TST)
 
-# Sélection du salaire moyen
+# Calculer population totale par commune
+pop_totale <- population %>%
+  group_by(CODGEO) %>%
+  summarise(pop_total = sum(NB))
+
+# Sélection salaire moyen global
 salaire_moyen <- salary %>%
   select(CODGEO, SNHM14)
 
 # Fusion des données
 df <- etab_grandes %>%
   inner_join(salaire_moyen, by = "CODGEO") %>%
-  filter(!is.na(SNHM14), !is.na(prop_grandes))
+  inner_join(pop_totale, by = "CODGEO") %>%
+  filter(!is.na(SNHM14), !is.na(prop_grandes), !is.na(pop_total))
 
-ggplot(df, aes(y = prop_grandes, x = SNHM14)) +
-  geom_point(alpha = 0.5, color = "steelblue") +
-  geom_smooth(method = "lm", se = TRUE, color = "darkred") +
+# Graphique avec taille + couleur par population, ligne de régression sans légende
+ggplot(df, aes(x = SNHM14, y = prop_grandes, size = pop_total, color = pop_total)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkred", show.legend = FALSE) +
+  scale_size_continuous(name = NULL,
+                        breaks = c(500000, 1000000, 1500000, 2000000),
+                        labels = NULL) +
+  scale_color_gradient(low = "lightblue", high = "darkblue", name = "Population totale") +
   labs(
-    title = "Lien entre proportion de grandes entreprises et salaire moyen",
-     x = "Salaire net moyen (en milliers euros)",
+    title = "Lien entre proportion de grandes entreprises et salaire moyen global",
+    x = "Salaire net moyen (en milliers d'euros)",
     y = "Proportion de grandes entreprises"
-   
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.box = "vertical")
+
 
 ```
 
@@ -333,19 +348,16 @@ sources: -net_salary_per_town_categories.csv
 
 Pour répondre à cette question, nous avons analysé l’impact des différents modes de cohabitation (familles biparentales, monoparentales, couples avec enfants, etc...) sur le niveau des salaires nets moyens dans les communes françaises. Les données utilisées proviennent des fichiers `population.csv` (modes de cohabitation) et `net_salary_per_town_categories.csv` (salaires moyens).  
 
-Nous avons calculé la proportion de chaque mode de cohabitation dans chaque commune, en nous concentrant sur les codes 11 (enfants avec deux parents), 12 (enfants avec un seul parent) et 22 (adultes en couple avec enfants). Ces proportions ont été croisées avec le salaire net moyen par commune.
+Nous avons calculé la proportion de chaque mode de cohabitation dans chaque commune. Ces proportions ont été croisées avec le salaire net moyen par commune.
 
-### Visualisation : répartition salariale selon le mode de cohabitation et carte des salaires moyens par commune
+### Visualisation : Comment le mode de cohabitation influence-t-il la répartition salariale ?
 
 
-1. **Boxplot** montrant la distribution des salaires nets moyens selon les trois modes de cohabitation (graphique du haut).  
-2. **Carte simplifiée** des salaires moyens par commune (graphique du bas), avec localisation des villes principales Paris (P), Lyon (L) et Marseille (M) indiquées par des points et des labels.
 
 ```{r}
 library(tidyverse)
 library(sf)
 library(ggplot2)
-library(patchwork)
 
 # Définir le chemin d'accès aux fichiers
 data_path <- "C:/Users/samel/Downloads/French employment_ salaries_ population per town/"
@@ -353,10 +365,6 @@ data_path <- "C:/Users/samel/Downloads/French employment_ salaries_ population p
 # Charger les données
 population <- read.csv(paste0(data_path, "population.csv"), stringsAsFactors = FALSE)
 salaire <- read.csv(paste0(data_path, "net_salary_per_town_categories.csv"), stringsAsFactors = FALSE)
-communes <- st_read(paste0(data_path, "communes.geojson"))
-
-# Identifier la colonne INSEE dans communes
-insee_col <- colnames(communes)[str_detect(tolower(colnames(communes)), "insee|code")][1]
 
 # Calculer la proportion par mode de cohabitation (exemples : 11, 12, 22)
 moco_summary <- population %>%
@@ -370,55 +378,30 @@ moco_summary <- population %>%
 moco_salaire <- moco_summary %>%
   left_join(salaire %>% select(CODGEO, SNHM14), by = "CODGEO")
 
-# Graphique 1 : boxplot salaire moyen selon mode de cohabitation
-p1 <- ggplot(moco_salaire, aes(x = factor(MOCO), y = SNHM14, fill = factor(MOCO))) +
+# Remplacer les codes MOCO par des libellés explicites
+moco_salaire <- moco_salaire %>%
+  mutate(MOCO = factor(MOCO,
+                       levels = c(11, 12, 22),
+                       labels = c("Enfants 2 parents",
+                                  "Enfants 1 parent",
+                                  "Adultes en couple")))
+
+# Graphique : boxplot salaire moyen selon mode de cohabitation
+ggplot(moco_salaire, aes(x = MOCO, y = SNHM14, fill = MOCO)) +
   geom_boxplot() +
   labs(x = "Mode de cohabitation", y = "Salaire net moyen (k€)",
        title = "Salaire moyen selon le mode de cohabitation") +
   theme_minimal() +
   theme(legend.position = "none")
 
-# Joindre communes et salaires
-communes_salaire <- communes %>%
-  left_join(salaire %>% select(CODGEO, SNHM14), by = setNames("CODGEO", insee_col))
-
-# Coordonnées approximatives des villes clés
-villes <- data.frame(
-  nom = c("P", "L", "M"),
-  lon = c(2.3522, 4.8357, 5.3698),
-  lat = c(48.8566, 45.7640, 43.2965)
-)
-
-# Graphique 2 : carte simplifiée des salaires moyens avec points et labels pour villes majeures
-p2 <- ggplot(communes_salaire) +
-  geom_sf(aes(fill = SNHM14), color = NA) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90",
-                      name = "Salaire moyen (k€)") +
-  geom_point(data = villes, aes(x = lon, y = lat), color = "darkblue", size = 3) +
-  geom_text(data = villes, aes(x = lon, y = lat, label = nom), color = "black",
-            nudge_y = 0.3, size = 4, fontface = "bold") +
-  labs(title = "Salaire moyen par commune en France") +
-  theme_minimal() +
-  theme(
-    legend.position = "right",
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid = element_blank()
-  )
-
-# Combiner les graphiques verticalement (p1 au-dessus de p2)
-combined_plot <- p1 / p2 + patchwork::plot_layout(heights = c(1, 2))
-
-# Afficher
-print(combined_plot)
 
 ```
 
 ### Analyse de la visualisation
-Le boxplot illustre que le salaire net moyen est assez similaire entre les différents modes de cohabitation, avec une médiane proche autour de 13-14 k€, bien que des écarts importants existent avec des valeurs extrêmes dans chaque catégorie.
+Ce graphique présente la distribution des salaires moyens en fonction du mode de cohabitation. On constate que les salaires médians des trois groupes sont très proches, autour de 13 k€. La dispersion des salaires est également similaire, avec une présence de valeurs extrêmes dans chaque catégorie.
 
-La carte révèle une concentration des salaires plus élevés dans les grandes agglomérations (Paris, Lyon, Marseille), indépendamment du mode de cohabitation.
-Ces résultats suggèrent que, comparé à des facteurs territoriaux et économiques, le mode de cohabitation a un impact limité sur la répartition salariale moyenne.
+Ces résultats suggèrent que le mode de cohabitation n’a pas d’impact marqué sur le salaire moyen par commune. Les variations salariales semblent plutôt liées à d’autres facteurs tels que la localisation géographique ou les caractéristiques socio-économiques locales.
+
 
 
 Sources:
@@ -429,7 +412,7 @@ communes.geojson
 
 
 
-## Question 2 : Quel est l’impact de la densité de population sur les salaires et le nombre de PME ?
+## Question 2 : Quel est l’impact de la densité de la population sur le nombre de PME ?
 
 Pour répondre à cette question, nous avons étudié la relation entre la population totale d’une commune et le nombre de Petites et Moyennes Entreprises (PME) présentes. Les données proviennent des fichiers `population.csv` (population totale), `base_etablissement_par_tranche_effectif.csv` (nombre d’établissements par taille) et `net_salary_per_town_categories.csv` (salaires moyens).
 
