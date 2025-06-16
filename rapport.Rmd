@@ -337,6 +337,10 @@ Nous avons calculé la proportion de chaque mode de cohabitation dans chaque com
 
 ### Visualisation : répartition salariale selon le mode de cohabitation et carte des salaires moyens par commune
 
+
+1. **Boxplot** montrant la distribution des salaires nets moyens selon les trois modes de cohabitation (graphique du haut).  
+2. **Carte simplifiée** des salaires moyens par commune (graphique du bas), avec localisation des villes principales Paris (P), Lyon (L) et Marseille (M) indiquées par des points et des labels.
+
 ```{r}
 library(tidyverse)
 library(sf)
@@ -354,7 +358,7 @@ communes <- st_read(paste0(data_path, "communes.geojson"))
 # Identifier la colonne INSEE dans communes
 insee_col <- colnames(communes)[str_detect(tolower(colnames(communes)), "insee|code")][1]
 
-# Calculer la proportion par mode de cohabitation
+# Calculer la proportion par mode de cohabitation (exemples : 11, 12, 22)
 moco_summary <- population %>%
   group_by(CODGEO, MOCO) %>%
   summarise(total = sum(NB), .groups = "drop") %>%
@@ -378,11 +382,21 @@ p1 <- ggplot(moco_salaire, aes(x = factor(MOCO), y = SNHM14, fill = factor(MOCO)
 communes_salaire <- communes %>%
   left_join(salaire %>% select(CODGEO, SNHM14), by = setNames("CODGEO", insee_col))
 
-# Graphique 2 : carte simplifiée des salaires moyens
+# Coordonnées approximatives des villes clés
+villes <- data.frame(
+  nom = c("P", "L", "M"),
+  lon = c(2.3522, 4.8357, 5.3698),
+  lat = c(48.8566, 45.7640, 43.2965)
+)
+
+# Graphique 2 : carte simplifiée des salaires moyens avec points et labels pour villes majeures
 p2 <- ggplot(communes_salaire) +
   geom_sf(aes(fill = SNHM14), color = NA) +
   scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90",
                       name = "Salaire moyen (k€)") +
+  geom_point(data = villes, aes(x = lon, y = lat), color = "darkblue", size = 3) +
+  geom_text(data = villes, aes(x = lon, y = lat, label = nom), color = "black",
+            nudge_y = 0.3, size = 4, fontface = "bold") +
   labs(title = "Salaire moyen par commune en France") +
   theme_minimal() +
   theme(
@@ -392,19 +406,20 @@ p2 <- ggplot(communes_salaire) +
     panel.grid = element_blank()
   )
 
-# Combiner les graphiques verticalement
+# Combiner les graphiques verticalement (p1 au-dessus de p2)
 combined_plot <- p1 / p2 + patchwork::plot_layout(heights = c(1, 2))
 
+# Afficher
 print(combined_plot)
 
 ```
-
 
 ### Analyse de la visualisation
 Le boxplot illustre que le salaire net moyen est assez similaire entre les différents modes de cohabitation, avec une médiane proche autour de 13-14 k€, bien que des écarts importants existent avec des valeurs extrêmes dans chaque catégorie.
 
 La carte révèle une concentration des salaires plus élevés dans les grandes agglomérations (Paris, Lyon, Marseille), indépendamment du mode de cohabitation.
 Ces résultats suggèrent que, comparé à des facteurs territoriaux et économiques, le mode de cohabitation a un impact limité sur la répartition salariale moyenne.
+
 
 Sources:
 population.csv
