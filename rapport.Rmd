@@ -397,6 +397,8 @@ combined_plot <- p1 / p2 + patchwork::plot_layout(heights = c(1, 2))
 
 print(combined_plot)
 
+```
+
 
 ### Analyse de la visualisation
 Le boxplot illustre que le salaire net moyen est assez similaire entre les différents modes de cohabitation, avec une médiane proche autour de 13-14 k€, bien que des écarts importants existent avec des valeurs extrêmes dans chaque catégorie.
@@ -459,17 +461,16 @@ ggplot(df, aes(x = population_totale, y = PME)) +
   coord_cartesian(xlim = c(0, 1e6), ylim = c(0, 7500)) +
   theme_minimal()
 
+```
 
-### Analyse de la visualisation
+### Analyse de la visualisation:
 
 Le graphique montre une forte corrélation positive entre la population totale d’une commune et le nombre de PME qu’elle accueille. Plus la population est élevée, plus le nombre de PME tend à augmenter, ce qui reflète une dynamique économique plus importante dans les communes densément peuplées.
 
 La droite de régression confirme cette tendance linéaire, suggérant que la densité démographique est un facteur clé dans le développement des entreprises locales.
 
-Sources
+Sources:
 population.csv
-
 base_etablissement_par_tranche_effectif.csv
-
 net_salary_per_town_categories.csv
 
