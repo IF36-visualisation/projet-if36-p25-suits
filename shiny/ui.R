@@ -52,6 +52,11 @@ dashboardPage(
                   title = "Proportion de grandes entreprises et salaire net moyen ",
                   width= 12,
                   plotOutput("samella", height = 300)
+                ), 
+                box(
+                  title = "Salaire horaire moyen selon la distance à Paris",
+                  width = 12,
+                  plotlyOutput("salaireDistancePlot")
                 )
             
               )
