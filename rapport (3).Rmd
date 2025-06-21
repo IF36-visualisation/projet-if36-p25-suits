@@ -1,0 +1,919 @@
+---
+title: " Analyse des inégalités en matière d'emploi, de salaire et de démographie en France"
+author: "Patrice MBANGUE, Estelle Patricia NOTOUM TAMKO, Dora NGUEMO KAMWOUA, Samella LEUKOUO"
+date: "21 juin 2025"
+output: 
+  prettydoc::html_pretty:
+    toc: true
+    toc_depth: 2
+    theme: cayman
+    highlight: github
+---
+
+# Introduction
+
+Dans le cadre de notre projet de data visualisation, notre équipe *Suits* a choisi d'explorer les données socio-économiques françaises afin de mettre en lumière les inégalités en matière d'emploi, de salaires et de démographie. Notre objectif est d'offrir une analyse approfondie des disparités entre les différentes villes françaises, en nous basant sur des données officielles fournies par l'INSEE (Institut National de la Statistique et des Études Économiques).
+
+Notre étude repose sur quatre fichiers de données, chacun apportant un éclairage spécifique sur les disparités observées en France :
+
+| Nom du fichier                                | Description                                                                                                                                             |
+|----------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `base_etablissement_par_tranche_effectif.csv` | Contient le nombre d’entreprises par commune française, classées selon leur taille. Permet d’analyser la répartition des entreprises sur le territoire. |
+| `name_geographic_information.csv`             | Fournit des informations géographiques détaillées sur chaque ville (latitude, longitude, codes et noms des régions et départements).                    |
+| `net_salary_per_town_per_category.csv`        | Présente les niveaux de salaires selon la ville, la catégorie professionnelle, l’âge et le sexe. Permet d’évaluer les inégalités salariales en France. |
+| `population.csv`                              | Contient des données démographiques par commune, incluant l’âge, le sexe et le mode de vie des habitants.                                               |
+
+En croisant ces différentes sources de données, nous visons à :
+
+- Identifier les inégalités économiques et démographiques entre les territoires français.
+- Analyser la répartition des entreprises et son impact sur l'emploi et les salaires.
+- Mettre en évidence les écarts salariaux en fonction de l’âge, du sexe et de la catégorie professionnelle.
+- Offrir une vision claire de la situation socio-économique des régions pour mieux comprendre les inégalités territoriales.
+
+Les jointures entre nos datasets se sont faites suivant la colonne **code_insee**
+
+# Exploration
+
+## Question 1 : Comment les salaires varient-ils en fonction des catégories professionnelles et du sexe ?
+
+Cette question explore les disparités de genre au sein de chaque catégorie, en utilisant les variables `SNHMFC14`, `SNHMFP14`, `SNHMFE14` et `SNHMFO14` pour les femmes ; `SNHMHC14`, `SNHMHP14`, `SNHMHE14` et `SNHMHO14` pour les hommes ; et `SNHMC14`, `SNHMP14`, `SNHME14`, `SNHMO14` pour l’ensemble. La description détaillées de chacune de ces variables figure dans notre readme.md sur notr Github.
+
+L’objectif est de comparer les rémunérations par sexe pour un même poste à l’aide d’histogrammes groupés, afin de mettre en lumière les écarts salariaux. Nous souhaitons ainsi démontrer que les femmes perçoivent souvent des salaires inférieurs à ceux des hommes, y compris à poste équivalent, comme le montre l’étude de l’INSEE ["Le revenu salarial s’établit à 20 670 euros en moyenne en 2014"] (https://www.insee.fr/fr/statistiques/2560524#).
+
+
+### Visualisation : Salaire moyen par catégories professionnelles et par sexe
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+# Charger les packages nécessaires
+# Charger les packages nécessaires
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Importer les données depuis le fichier CSV
+salaire_ville <- read.csv("C:/Users/estel/OneDrive/Documents/French employment_ salaries_ population per town/net_salary_per_town_categories.csv")
+
+# Sélectionner les colonnes utiles pour l'analyse :
+# - Salaires par catégorie et par sexe
+# - Salaires pour l'ensemble (hommes + femmes)
+salaire_sexe <- salaire_ville %>%
+  select(CODGEO, LIBGEO, 
+         SNHMFC14, SNHMFP14, SNHMFE14, SNHMFO14,  # Femmes
+         SNHMHC14, SNHMHP14, SNHMHE14, SNHMHO14,  # Hommes
+         SNHMC14, SNHMP14, SNHME14, SNHMO14       # Ensemble (hommes + femmes)
+  ) %>%
+  # Conversion de toutes les variables sélectionnées en numérique
+  mutate(across(everything(), as.numeric)) %>%
+  
+  # Passage du format large au format long pour faciliter l'analyse
+  pivot_longer(
+    cols = -c(CODGEO, LIBGEO),
+    names_to = "Categorie_Sexe",
+    values_to = "Salaire"
+  ) %>%
+  
+  # Création de deux colonnes : Sexe et Catégorie professionnelle
+  mutate(
+    Sexe = case_when(
+      grepl("^SNHMF", Categorie_Sexe) ~ "Femme",
+      grepl("^SNHMH", Categorie_Sexe) ~ "Homme",
+      grepl("^SNHMC|^SNHMP|^SNHME|^SNHMO", Categorie_Sexe) ~ "Ensemble",
+      TRUE ~ NA_character_
+    ),
+    Categorie = case_when(
+      grepl("C14$", Categorie_Sexe) ~ "Cadres",
+      grepl("P14$", Categorie_Sexe) ~ "Prof. intermédiaires",
+      grepl("E14$", Categorie_Sexe) ~ "Employés",
+      grepl("O14$", Categorie_Sexe) ~ "Ouvriers",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  
+  # Suppression des lignes incomplètes
+  filter(!is.na(Categorie) & !is.na(Sexe))
+
+# Calcul de la moyenne du salaire horaire par catégorie et par sexe
+salaire_moyen_sexe <- salaire_sexe %>%
+  group_by(Categorie, Sexe) %>%
+  summarise(Salaire_Moyen = mean(Salaire, na.rm = TRUE)) %>%
+  ungroup()
+
+# Création du graphique : histogramme groupé par catégorie et par sexe
+ggplot(salaire_moyen_sexe, aes(x = Categorie, y = Salaire_Moyen, fill = Sexe)) +
+  geom_bar(position = "dodge", stat = "identity") +  # Barres côte à côte
+  geom_text(aes(label = round(Salaire_Moyen, 1)),    # Affichage des valeurs sur les barres
+            position = position_dodge(width = 0.9), 
+            vjust = -0.5, size = 3.5) +
+  labs(
+    title = "Salaire net horaire moyen par catégorie professionnelle et par sexe",
+    x = "Catégorie professionnelle",
+    y = "Salaire net horaire moyen (€)", 
+    caption = "Source : net_salary_per_town_categories.csv" 
+  ) +
+  scale_fill_manual(values = c("#4E79A7", "#F28E2B", "#59A14F")) +  # Couleurs distinctes
+  theme_minimal()
+
+
+```
+
+
+**BAS : ** Ce graphe est disponible en interactif sur shiny
+
+### Analyse de la visualisation : 
+
+Le graphique ci-dessus met en évidence des disparités salariales importantes selon la catégorie socioprofessionnelle et le sexe.  
+De manière générale, les cadres perçoivent les salaires les plus élevés, suivis par les professions intermédiaires, puis les employés, et enfin les ouvriers. Quelle que soit la catégorie, les hommes ont systématiquement un salaire net horaire moyen supérieur à celui des femmes, confirmant ainsi l’existence d’une inégalité salariale entre les sexes.  
+L’écart est particulièrement marqué chez les cadres et les ouvriers, tandis qu’il est légèrement moins prononcé chez les employés et les professions intermédiaires. Ces observations sont cohérentes avec les tendances mises en avant par l’étude de l’INSEE intitulée *« Le revenu salarial s’établit à 20 670 euros en moyenne en 2014 »*, disponible [ici](https://www.insee.fr/fr/statistiques/2560524#), qui souligne à la fois la hiérarchie salariale entre les statuts professionnels et la persistance des écarts entre les sexes.
+
+## Question 2 : comment le salaire moyen net par heure nationale évolue t-il en fonction de l'âge ?
+
+Pour répondre à cette question, nous calculerons dans un premier temps la moyenne nationale du salaire net horaire pour chaque tranche d’âge (c’est-à-dire en tenant compte de l’ensemble des communes françaises).  
+Ensuite, nous construirons un **graphique en courbe (line chart)** afin d’observer l’évolution du salaire net horaire moyen national en fonction des tranches d’âge.
+
+Un article publié le 09/03/2019 dans *Les Clés du Social*, sur l’évolution des salaires selon l’âge, indique que le salaire net moyen est d’environ **1 350 €** à 25 ans. Il augmente ensuite pendant 10 à 15 ans, stagne autour de **2 000 €**, puis repart à la hausse durant les dix dernières années de carrière, atteignant environ **2 300 €** en moyenne.  
+L’article est disponible [ici](https://www.clesdusocial.com/comment-evoluent-les-salaires-selon-l-age#:~:text=Ainsi%2C%20le%20salaire%20net%20moyen%20est%20%C3%A9tabli%20%C3%A0,de%20carri%C3%A8re%20jusqu%E2%80%99%C3%A0%202%20300%20%E2%82%AC%20en%20moyenne).  
+Nous nous attendons donc à constater une tendance où le salaire moyen des seniors est plus élevé que celui des jeunes en début de carrière.
+
+### Visualisation: Line chart de l'évolution du salaire net moyen par heure en fonction de la tranche d'âge
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Calculer les moyennes nationales pour chaque tranche d'âge
+# Importer les données depuis le fichier CSV
+salaire_ville <- read.csv("C:/Users/estel/Downloads/archive/net_salary_per_town_categories.csv", sep = ",", encoding = "UTF-8")
+salaires_age <- salaire_ville %>%
+  summarise(
+    `18-25 ans` = mean(SNHM1814, na.rm = TRUE),
+    `26-50 ans` = mean(SNHM2614, na.rm = TRUE),
+    `50 ans et plus` = mean(SNHM5014, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = everything(), names_to = "Tranche_Age", values_to = "Salaire_Moyen")
+
+# Tracer de la line chart
+ggplot(salaires_age, aes(x = Tranche_Age, y = Salaire_Moyen, group = 1)) +
+  geom_line(color = "#0072B2", size = 1.5) +
+  geom_point(color = "#D55E00", size = 4) +
+  labs(
+    title = "Évolution du salaire net moyen en fonction de l'âge",
+    x = "Tranche d'âge",
+    y = "Salaire net moyen horaire (€)",
+    caption = "Source : Données issues du fichier net_salary_per_town_per_category.csv"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 14),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(color = "black")
+  )
+
+```
+### Analyse de la visualisation : 
+
+Sur le graphique obtenu, on constate que le salaire net horaire moyen **augmente bel et bien avec l'âge**, et que les jeunes débutants sont effectivement **moins bien rémunérés** que les seniors.  
+Cette tendance peut s’expliquer par plusieurs facteurs, notamment :
+
+* **L’expérience professionnelle** : les seniors cumulent davantage d’années d’expérience, ce qui renforce leur valeur sur le marché de l’emploi.
+* **La négociation salariale** : selon un article publié le 17/09/2024 sur *Franceinfo*, un salarié plus âgé, fort de ses compétences et de sa productivité, est souvent en mesure de mieux "se vendre" auprès de ses employeurs, et donc de négocier un salaire plus élevé.
+* **L’ancienneté** : toujours selon cet article, certaines entreprises ou branches professionnelles appliquent des **grilles salariales** prévoyant des augmentations automatiques en fonction de l’ancienneté. Cela entraîne une hausse progressive des salaires avec les années passées dans l’entreprise.
+
+**Source de l'article :**  
+[Franceinfo — « Salaires : pourquoi les vieux sont mieux lotis que les jeunes » (17/09/2024)](https://www.francetvinfo.fr/economie/disparites-salariales/salaires-pourquoi-les-vieux-sont-mieux-lotis-que-les-jeunes_675195.html)
+
+## Question 3 : Existe-t-il des différences significatives entre les salaires des différentes villes françaises ?
+
+Pour répondre à cette question, nous avons envisagé deux approches complémentaires :
+
+- Réaliser une **répartition des salaires moyens horaires** sur une **carte de la France**.
+- Comparer les salaires moyens via un **histogramme** représentant plusieurs villes françaises.
+
+Selon un article rédigé par *Tatamo Ny Aina*, publié le 27/05/2024, intitulé *« Les villes françaises où les habitants sont le mieux payés en 2024 »*, il existe effectivement des disparités salariales importantes entre les villes.  
+L’article montre que les salaires moyens sont généralement plus élevés dans les grandes agglomérations.  
+Nous nous attendons donc à observer une tendance selon laquelle **le salaire moyen à Paris est supérieur à celui d'une ville comme Troyes**.
+
+### Première visualisation : répartition des salaires horaires moyens sur une carte de la France
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(dplyr)
+library(ggplot2)
+library(maps)      # Pour récupérer la carte de France
+library(readr)     # Pour lire les différents jeux de données
+library(sf)
+library(plotly) #Librairie permettant d'ajouter des infos bulles sur notre carte
+
+
+# Chargement des données
+data_salaire <- read_csv("C:/Users/estel/Downloads/archive/net_salary_per_town_categories.csv")
+data_localisation <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+
+# Chargement de la carte de la France
+data_localisation <- data_localisation %>% mutate(code_insee = as.character(code_insee))
+
+data_localisation <- data_localisation %>% mutate(code_insee = if_else(nchar(code_insee) == 4, paste0("0", code_insee), code_insee)) %>% mutate(longitude = as.numeric(longitude), latitude = as.numeric(latitude))
+
+data_complet <- left_join(data_salaire, data_localisation, by=c("CODGEO"="code_insee"))
+
+france_map <- map_data("france")
+ggplot() + geom_polygon(data = france_map, aes(x = long, y = lat, group = group),fill = "white", color = "black")+ geom_point(data = data_complet, aes(x = longitude, y = latitude, color = SNHM14),size = 2) +
+  scale_color_viridis_c(option = "plasma") +
+  theme_minimal() +
+  labs(title = "Salaire moyen horaire par ville en France",
+       color = "Salaire moyen horaire (€)",
+       caption ="source: -net_salary_per_town_categories.csv
+       -name_geographic_information.csv" )
+
+```
+
+
+### Analyse de la première visualisation : 
+
+L’analyse de cette première visualisation nous a permis de mieux comprendre notre dataset. Nous avons ainsi relevé les points suivants :
+
+- Les points affichés sur la carte sont **trop denses**, ce qui rend difficile l’identification précise des villes associées à chaque point.
+- Pour interpréter correctement cette visualisation, il faudrait connaître **parfaitement la localisation géographique de chaque ville**, ce qui n’est pas le cas pour un grand nombre d’utilisateurs.
+- On observe que les **points ayant une couleur similaire sont souvent regroupés géographiquement**, ce qui suggère une certaine cohérence spatiale des salaires moyens horaires.
+
+Au vu de ces éléments, nous estimons qu’il serait **préférable de regrouper les données par régions** pour améliorer la lisibilité. Il serait également pertinent d’**ajouter des info-bulles** (tooltips) indiquant le nom des régions afin de faciliter l’interprétation.
+
+Cependant, avant de procéder à cette refonte, nous devons **mettre à jour notre fichier de données géographiques**, car celui que nous utilisons est basé sur les **anciennes divisions régionales de 2014**.
+
+**Source :**  
+[Pourquoi a-t-on fusionné les régions ? — Deciders.io](https://deciders.io/fiches-pratiques/conseiller-regional/les-regions/pourquoi-a-t-on-fusionne-les-regions/#:~:text=%C3%80%20l%E2%80%99issue%20de%20la%20r%C3%A9forme%20territoriale%2C%20entr%C3%A9e%20en,la%20France%20sont%20les%20suivantes%20%3A%20Provence-Alpes-C%C3%B4te%20d%E2%80%99Azur.)
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+data_complet <- data_complet %>%
+  mutate(nom_région = case_when(
+    nom_région %in% c("Rhône-Alpes", "Auvergne") ~ "Auvergne-Rhône-Alpes",
+    nom_région %in% c("Bourgogne", "Franche-Comté") ~ "Bourgogne-Franche-Comté",
+    nom_région == "Bretagne" ~ "Bretagne",
+    nom_région == "Centre" ~ "Centre-Val de Loire",
+    nom_région == "Corse" ~ "Corse",
+    nom_région %in% c("Alsace", "Lorraine", "Champagne-Ardenne") ~ "Grand Est",
+    nom_région %in% c("Picardie", "Nord-Pas-de-CalaisAquitaine") ~ "Hauts-de-France",
+    nom_région == "Île-de-France" ~ "Île-de-France",
+    nom_région %in% c("Haute-Normandie", "Basse-Normandie", "Basse-NormandiePays de la Loire") ~ "Normandie",
+    nom_région %in% c("Aquitaine", "Limousin", "Poitou-Charentes", "Nord-Pas-de-CalaisAquitaine") ~ "Nouvelle-Aquitaine",
+    nom_région %in% c("Midi-Pyrénées", "Languedoc-Roussillon") ~ "Occitanie",
+    nom_région %in% c("Pays de la Loire", "Basse-NormandiePays de la Loire") ~ "Pays de la Loire",
+    nom_région == "Provence-Alpes-Côte d'Azur" ~ "Provence-Alpes-Côte d'Azur",
+    TRUE ~ nom_région
+  )) %>%
+  filter(!nom_région %in% c("Guyane", "Martinique", "Guadeloupe", "La Réunion"))  # Exclure les DOM-TOM
+```
+
+
+
+On obtient donc notre nouvelle carte : 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+france_regions <- st_read("https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions-version-simplifiee.geojson")
+#Chargement du fichier JSON contenant la carte de la France avec ses régions
+data_region <- data_complet %>% group_by(nom_région) %>% summarise(salaire_moyen = mean(SNHM14, na.rm = TRUE))
+france_regions <- france_regions %>% rename(nom_région = nom)
+carte_salaire <- france_regions %>% left_join(data_region, by = "nom_région")
+
+carte_salaire <- ggplot(carte_salaire) +
+  geom_sf(aes(fill = salaire_moyen, tooltip = nom_région), color = "white") +
+  scale_fill_viridis_c(option = "plasma") +
+  labs(title = "Salaire moyen horaire par région en France",
+       fill = "Salaire moyen horaire (€)") +
+  theme_minimal()
+
+# Ajouter les infos bulles 
+ggplotly(carte_salaire)
+
+```
+
+
+**Sources : **
+
+Les visualisations et analyses précédentes s’appuient sur les sources suivantes :
+
+- **Fichier CSV des salaires** par ville et par catégorie socio-professionnelle :  
+  `net_salary_per_town_categories.csv`
+
+- **Fichier CSV des informations géographiques** (noms, coordonnées, codes INSEE, etc.) :  
+  `name_geographic_information.csv`
+
+- **Fichier GeoJSON des régions françaises (version simplifiée, post-réforme territoriale)** :  
+  [france-geojson — régions simplifiées](https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/regions-version-simplifiee.geojson)
+
+
+### Analyse de la visualisation finale : 
+
+Grâce à cette visualisation finale, nous constatons une **amélioration nette par rapport à la précédente**. La représentation par région permet une lecture plus claire et plus pertinente des disparités salariales sur le territoire français.
+
+Comme nous nous y attendions, on observe que la **région Île-de-France**, où se situe la ville de Paris, affiche un **salaire moyen horaire nettement plus élevé** que la **région Grand Est**, dans laquelle se trouve la ville de Troyes.  
+Cette différence peut s’expliquer par plusieurs facteurs, notamment le **coût de la vie**. À titre d’exemple, **le prix moyen du mètre carré** est estimé à **30 €/m² à Paris**, contre **14 €/m² à Strasbourg**, une grande ville également située dans le Grand Est.
+
+### Sources des articles :
+
+- **Prix du mètre carré dans les grandes villes françaises** :  
+  [Classement des loyers par m² — SeLoger / Côtes & Mer](https://www.cotes-et-mer.fr/actualites-immobilieres/classement-des-prix-des-loyers-en-france-palmares-des-10-grandes-villes.html#:~:text=Voici%20le%20classement%20des%20loyers%20moyens%20par%20m%C2%B2,Nantes%20%3A%2013%20%E2%82%AC%2Fm%C2%B2%20%2ASource%20%3A%20SeLoger%203.)
+
+- **Disparités salariales par ville (article de Tatamo Ny Aina)** :  
+  [Les villes françaises où les habitants sont le mieux payés en 2024 — Affaires Internationales](https://www.affairesinternationales.fr/voici-les-villes-francaise-ou-les-habitants-sont-le-mieux-payes-en-2024/)
+
+
+## Question 4 : Quel est l’impact de la densité de la population sur le nombre de PME ?
+
+Pour répondre à cette question, nous avons étudié la relation entre la population totale d’une commune et le nombre de Petites et Moyennes Entreprises (PME) présentes. Les données proviennent des fichiers `population.csv` (population totale), `base_etablissement_par_tranche_effectif.csv` (nombre d’établissements par taille) et `net_salary_per_town_categories.csv` (salaires moyens).
+
+Nous avons calculé la population totale par commune ainsi que le nombre de PME, défini ici comme la somme des entreprises ayant entre 10 et 249 salariés (`E14TS10`, `E14TS20`, `E14TS50`, `E14TS100`, `E14TS200`). Ces données ont été croisées pour analyser l’impact de la densité démographique sur l’activité économique locale.
+
+
+### Visualisation : impact de la population totale sur le nombre de PME
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+
+# Définir le chemin d'accès aux fichiers
+data_path <- "C:/Users/samel/Downloads/French employment_ salaries_ population per town/"
+
+# Charger les données
+population <- read.csv("C:/Users/estel/OneDrive/Documents/French employment_ salaries_ population per town/population.csv")
+salaire <- read.csv("C:/Users/estel/OneDrive/Documents/French employment_ salaries_ population per town/net_salary_per_town_categories.csv")
+etablissements <- read.csv("C:/Users/estel/OneDrive/Documents/French employment_ salaries_ population per town/base_etablissement_par_tranche_effectif.csv")
+
+# Calculer la population totale par commune
+pop_totale <- population %>%
+  group_by(CODGEO) %>%
+  summarise(population_totale = sum(NB))
+
+# Calculer nombre de PME par commune
+etablissements <- etablissements %>%
+  mutate(
+    PME = E14TS10 + E14TS20 + E14TS50 + E14TS100 + E14TS200
+  ) %>%
+  select(CODGEO, PME)
+
+# Joindre population, salaire et PME
+df <- pop_totale %>%
+  left_join(salaire %>% select(CODGEO, SNHM14), by = "CODGEO") %>%
+  left_join(etablissements, by = "CODGEO")
+
+# Scatter plot population totale vs nombre de PME avec zoom
+ggplot(df, aes(x = population_totale, y = PME)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkgreen") +
+  labs(title = "Impact de la population totale sur le nombre de PME",
+       x = "Population totale par commune",
+       y = "Nombre de PME") +
+  coord_cartesian(xlim = c(0, 1e6), ylim = c(0, 7500)) +
+  theme_minimal()
+
+```
+
+### Analyse de la visualisation :
+
+Le graphique montre une forte corrélation positive entre la population totale d’une commune et le nombre de PME qu’elle accueille. Plus la population est élevée, plus le nombre de PME tend à augmenter, ce qui reflète une dynamique économique plus importante dans les communes densément peuplées.
+
+La droite de régression confirme cette tendance linéaire, suggérant que la densité démographique est un facteur clé dans le développement des entreprises locales.
+
+**Sources: **
+population.csv
+base_etablissement_par_tranche_effectif.csv
+net_salary_per_town_categories.csv
+
+## Question 5 : Existe t-il des régions qui possèdent plus d'entreprises que d'autres ?
+
+Pour répondre à cette question, nous avons décidé de représenter le nombre total d’établissements présents dans chaque région française. Comme type de visualisation qu'on peut avoir on a un hitsogramme.
+Avant même de réaliser l’analyse, on peut déjà s’attendre à observer des différences importantes entre les régions. Selon une étude publiée par Statista en 2024, l’Île-de-France reste la région qui regroupe le plus grand nombre d’entreprises en France, avec plus de 2,85 millions de sociétés. Ce résultat s’explique notamment par le poids économique de Paris et sa concentration d’activités.
+
+On anticipe donc que l’Île-de-France occupera la première position dans notre classement, suivie probablement par des régions économiquement dynamiques comme Auvergne-Rhône-Alpes et Provence-Alpes-Côte d’Azur. À l’inverse, des régions plus rurales ou moins peuplées, comme la Corse ou la Bourgogne-Franche-Comté, devraient compter un nombre d’entreprises plus faible.
+
+**source** : https://fr.statista.com/statistiques/1080530/nombre-entreprises-france-selon-region/
+
+### Visualisation  : histogramme comparatif du nombre total d'entreprises présentent dans chaque région : 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# dataset
+geography <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+industry <- read_csv("C:/Users/estel/Downloads/archive/base_etablissement_par_tranche_effectif.csv")
+
+# jointure entre geography et industry
+# remplacer les virgules par des points dans la colonne longitude
+geography$longitude <- str_replace_all(as.character(geography$longitude), ",", ".")
+#Supprimer les lignes où longitude est égale à "-"
+geography <- geography[geography$longitude != "-", ]
+#Supprimer les lignes avec NA dans longitude ou latitude
+geography <- geography %>% drop_na(longitude, latitude)
+#Convertir longitude en numérique
+geography$longitude <- as.numeric(geography$longitude)
+#Supprimer les doublons sur code_insee (garder la première occurrence)
+geography <- geography %>% distinct(code_insee, .keep_all = TRUE)
+# Supprimer les lignes où CODGEO n'est pas un entier
+industry <- industry %>% filter(str_detect(CODGEO, "^\\d+$"))
+# Convertir CODGEO en entier
+industry$CODGEO <- as.integer(industry$CODGEO)
+# Fusionner les deux jeux de données
+merged1 <- merge(geography, industry, by.x = "code_insee", by.y = "CODGEO")
+
+# Calcul du total d'entreprises par région
+entreprises_par_region <- merged1 %>%
+  group_by(nom_région) %>%
+  summarise(total_entreprises = sum(E14TST, na.rm = TRUE)) %>%
+  arrange(desc(total_entreprises))
+
+ggplot(entreprises_par_region, aes(x = reorder(nom_région, total_entreprises), y = total_entreprises)) +
+  geom_bar(stat = "identity", fill = "#4E79A7") +
+  coord_flip() +
+  labs(title = "Nombre total d'entreprises par région",
+       x = "Région",
+       y = "Nombre total d'entreprises") +
+  theme_minimal()
+
+```
+
+### Analyse de la visualisation
+
+Le graphique met en évidence une répartition très inégale du nombre total d’entreprises sur le territoire français.
+
+* L'Île-de-France se distingue largement des autres régions avec un nombre d’entreprises très supérieur, dépassant le million. Cette situation s’explique par la forte densité de population, la présence de Paris qui concentre de nombreuses activités économiques, de services, de sièges sociaux et de grandes entreprises internationales. C’est également le principal pôle décisionnel, administratif et financier du pays.
+
+* On observe un deuxième groupe composé notamment de Provence-Alpes-Côte d’Azur et Rhône-Alpes, qui affichent également un nombre important d’établissements, mais nettement en-dessous de l’Île-de-France.
+
+* La majorité des autres régions présentent un nombre d’entreprises bien plus modeste. Ce sont souvent des régions à dominante rurale (Limousin, Franche-Comté, Auvergne...).
+
+Intéressons nous plus à notre top trois. On pourrait se demander s'il existe des départements dans ces régions là qui comportent plus d'entreprises que d'autres.
+
+
+## Question 6 : Quelle est le nombre total d'entreprises dans chaque département de la région d'île de France ?
+
+L'objectif de cette question et de comparer le nombre d'entreprises présentes dans chaque ville de la région d'île de France. On s'attends à ce que ce nombre soit plus important à Paris, capitale de la France. 
+Pour le choix du graphique nous allons donc opter pour un bar plot, étant donné qu'il s'agit d'une comparaison.
+
+### visualisation : bar plot du nombre total d'entreprises en île de France
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(tidyr)
+
+# Chargement des données
+geography <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+industry <- read_csv("C:/Users/estel/Downloads/archive/base_etablissement_par_tranche_effectif.csv")
+
+# Nettoyage des données géographiques
+geography$longitude <- str_replace_all(as.character(geography$longitude), ",", ".")
+geography <- geography[geography$longitude != "-", ]
+geography <- geography %>% drop_na(longitude, latitude)
+geography$longitude <- as.numeric(geography$longitude)
+geography <- geography %>% distinct(code_insee, .keep_all = TRUE)
+
+# Nettoyage des données industrielles
+industry <- industry %>% filter(str_detect(CODGEO, "^\\d+$"))
+industry$CODGEO <- as.integer(industry$CODGEO)
+
+# Fusion des deux jeux de données
+merged1 <- merge(geography, industry, by.x = "code_insee", by.y = "CODGEO")
+
+# Filtrage pour l'Île-de-France uniquement
+idf_data <- merged1 %>%
+  filter(nom_région == "Île-de-France")
+
+# Répartition des entreprises par département (ou code_insee si pas de nom département)
+entreprises_idf <- idf_data %>%
+  group_by(nom_département) %>%  # <- ou bien code_insee si nom_département absent
+  summarise(total_entreprises = sum(E14TST, na.rm = TRUE)) %>%
+  arrange(desc(total_entreprises))
+
+# Affichage en barres
+ggplot(entreprises_idf, aes(x = reorder(nom_département, total_entreprises), y = total_entreprises)) +
+  geom_bar(stat = "identity", fill = "#4E79A7") +
+  coord_flip() +
+  labs(title = "Répartition des entreprises en Île-de-France",
+       x = "Département",
+       y = "Nombre total d'entreprises") +
+  theme_minimal()
+
+```
+
+
+
+### Analyse de la visualisation
+
+L'analyse de ce graphe vient confirmer ce à quoi on s'attendait. Paris comporte effectivement plus d'entrprises que les autres départements. En effet, Paris concentre le plus grand nombre d’entreprises car elle représente le centre économique, politique et administratif de la France. Sa forte densité de population, ses infrastructures développées (transports, réseaux), la présence de sièges sociaux, et un marché dynamique attirent naturellement les investisseurs. De plus, la capitale offre un bassin d’emploi qualifié et un environnement propice aux échanges entre entreprises, ce qui renforce son attractivité économique. 
+
+
+## Question 7 : Quelle est le nombre total d'entreprises dans chaque département de la région de Provences-Alpes-côte d'azur ?
+Tout comme la question précdente, l'objectif de cette question est de faire une comparaison entre le nombre d'entrprises présentes dans chque départements de la région Provences-Alpes-côte d'Azur. D'après un rapport de l'insee, les Bouches-du-Rhône concentrent près de la moitié des salariés des entreprises implantées dans la région (405 000 salariés), les Alpes-Maritimes en employant 218 000, le Var 150 000, le Vaucluse 100 000 et les départements alpins 45 000 à eux deux. On s'attends donc à voir appraître en tête de liste ces deux départements.
+
+### visualisation : bar plot du nombre total d'entreprises en Provences-Alpes-côte d'azur
+ 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+
+# Filtrer les données pour la région PACA
+paca_departements <- merged1 %>%
+  filter(nom_région == "Provence-Alpes-Côte d'Azur") %>%
+  group_by(nom_département) %>%
+  summarise(total_entreprises = sum(E14TST, na.rm = TRUE)) %>%
+  arrange(desc(total_entreprises))
+
+# Visualisation
+ggplot(paca_departements, aes(x = reorder(nom_département, total_entreprises), 
+                              y = total_entreprises)) +
+  geom_bar(stat = "identity", fill = "#4E79A7") +
+  coord_flip() +
+  labs(title = "Nombre total d'entreprises par département en PACA",
+       x = "Département",
+       y = "Nombre d'entreprises") +
+  theme_minimal()
+
+```
+
+
+### Analyse de la visualisation : 
+
+Comme on pouvait s’y attendre, les résultats confirment que les Bouches-du-Rhône et les Alpes-Maritimes concentrent le plus grand nombre d’entreprises dans la région Provence-Alpes-Côte d’Azur.
+
+Cette prédominance s'explique par la présence de grandes agglomérations comme Marseille et Nice, qui jouent un rôle central dans l'économie régionale. Ces villes attirent de nombreux acteurs économiques grâce à leur dynamisme, leur position stratégique en bord de mer, et leur rayonnement national et international.
+
+Les entreprises y trouvent un environnement propice à leur développement, notamment en raison d’infrastructures adaptées, d’un marché local important, et d’une main-d'œuvre diversifiée. L’activité touristique très développée dans ces départements contribue également à la création de nombreuses entreprises dans les secteurs de l’hôtellerie, de la restauration, des transports et des services.
+
+## Question 8 :  Quelle est le nombre total d'entreprises dans chaque département de la région de Rhône-Alpes ?
+
+Tout comme avec les deux précédentes questions, l'objectif ici est de faire une comparaison entre le nombre d'entrprises présentes dans cahque département de la région Rhône-Alpes.On s'attend à voir apparître en tête de liste : Rhône et isère.
+
+
+### visualisation : bar plot du nombre total d'entreprises en Rhône-Alpes
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(readr)
+
+# Charger les données
+geography <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+industry <- read_csv("C:/Users/estel/Downloads/archive/base_etablissement_par_tranche_effectif.csv")
+
+# Nettoyage et préparation
+geography$longitude <- str_replace_all(as.character(geography$longitude), ",", ".")
+geography <- geography[geography$longitude != "-", ]
+geography <- geography %>% drop_na(longitude, latitude)
+geography$longitude <- as.numeric(geography$longitude)
+geography <- geography %>% distinct(code_insee, .keep_all = TRUE)
+
+industry <- industry %>% filter(str_detect(CODGEO, "^\\d+$"))
+industry$CODGEO <- as.integer(industry$CODGEO)
+
+# Fusionner les deux jeux de données
+merged <- merge(geography, industry, by.x = "code_insee", by.y = "CODGEO")
+
+# Filtrer pour la région Rhône-Alpes
+merged_rhone_alpes <- merged %>% filter(nom_région == "Rhône-Alpes")
+
+# Regrouper par département
+entreprises_par_departement <- merged_rhone_alpes %>%
+  group_by(nom_département) %>%
+  summarise(total_entreprises = sum(E14TST, na.rm = TRUE)) %>%
+  arrange(desc(total_entreprises))
+
+# Visualisation
+ggplot(entreprises_par_departement, aes(x = reorder(nom_département, total_entreprises), y = total_entreprises)) +
+  geom_bar(stat = "identity", fill = "#4E79A7") +
+  coord_flip() +
+  labs(
+    title = "Nombre total d'entreprises par département - Rhône-Alpes",
+    x = "Département",
+    y = "Nombre total d'entreprises"
+  ) +
+  theme_minimal()
+
+```
+
+### Analyse de la visualisation 
+
+Comme on s’y attendait, les départements du Rhône et de l’Isère arrivent en tête du classement en nombre d’entreprises dans la région Rhône-Alpes.
+
+Cette prédominance peut s’expliquer par plusieurs facteurs. Le Rhône, avec la métropole de Lyon, constitue un pôle économique majeur non seulement à l’échelle régionale mais aussi nationale. Lyon est une grande ville industrielle, commerciale et tertiaire, qui attire naturellement les sièges sociaux, les start-ups, ainsi qu’un tissu dense de PME et d’artisans.
+
+L’Isère, quant à lui, bénéficie de la présence de Grenoble, reconnue comme un centre d’innovation et de recherche. Ce territoire dynamique regroupe de nombreuses entreprises technologiques, notamment dans les secteurs de la microélectronique, des nanotechnologies et des biotechnologies, ainsi qu’un fort lien avec les universités et laboratoires de recherche.
+
+Ces deux départements concentrent donc à la fois les infrastructures, les talents et les réseaux économiques qui favorisent la création et le maintien d’un nombre élevé d’entreprises.
+
+## Question 9 : Existe t-il des régions plus peuplées que d'autres ?
+
+Pour répondre à cette question, nous allons analyser la population totale de chaque région française. Cette analyse pourra être illustrée par une treemap montrant le nombre d’habitants par région, ce qui permettra de visualiser rapidement les disparités démographiques.
+
+Avant même de réaliser l’étude, il est raisonnable de s’attendre à des différences marquées entre les régions, tant en termes de population que de densité.
+
+En effet, selon un rapport de l’INSEE datant du 1er janvier 2013, l’Île-de-France compte près de 12 millions d’habitants (exactement 11 959 807), ce qui représente environ 19 % de la population totale de la France métropolitaine, répartie sur moins de 4 % des communes. Cette concentration démographique est largement liée à la métropole parisienne, un centre économique et urbain majeur.
+
+On peut donc anticiper que l’Île-de-France sera la région la plus peuplée dans notre analyse, largement devant les autres régions. À l’inverse, des régions moins urbanisées ou à dominante rurale, comme la Corse ou la Bourgogne-Franche-Comté, devraient afficher une population totale nettement inférieure.
+
+Ainsi, notre visualisation devrait refléter cette forte disparité démographique entre régions, confirmant que la population n’est pas répartie uniformément sur le territoire français.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(treemap)
+library(plotly)
+
+# Charger les datasets
+population <- read_csv("C:/Users/estel/Downloads/archive/population.csv")
+geography <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+
+# Harmoniser les colonnes de jointure
+population$CODGEO <- as.character(population$CODGEO)
+geography$code_insee <- as.character(geography$code_insee)
+geography <- geography %>% rename(CODGEO = code_insee)
+
+# Jointure
+# Agréger la population par région
+geography_unique <- geography %>% distinct(CODGEO, .keep_all = TRUE)
+population_region <- population %>%
+  left_join(geography_unique, by = "CODGEO")
+population_region <- population_region %>%
+  mutate(nom_région = case_when(
+    nom_région %in% c("Rhône-Alpes", "Auvergne") ~ "Auvergne-Rhône-Alpes",
+    nom_région %in% c("Bourgogne", "Franche-Comté") ~ "Bourgogne-Franche-Comté",
+    nom_région == "Bretagne" ~ "Bretagne",
+    nom_région == "Centre" ~ "Centre-Val de Loire",
+    nom_région == "Corse" ~ "Corse",
+    nom_région %in% c("Alsace", "Lorraine", "Champagne-Ardenne") ~ "Grand Est",
+    nom_région %in% c("Picardie", "Nord-Pas-de-CalaisAquitaine") ~ "Hauts-de-France",
+    nom_région == "Île-de-France" ~ "Île-de-France",
+    nom_région %in% c("Haute-Normandie", "Basse-Normandie", "Basse-NormandiePays de la Loire") ~ "Normandie",
+    nom_région %in% c("Aquitaine", "Limousin", "Poitou-Charentes", "Nord-Pas-de-Calais") ~ "Nouvelle-Aquitaine",
+    nom_région %in% c("Midi-Pyrénées", "Languedoc-Roussillon") ~ "Occitanie",
+    nom_région %in% c("Pays de la Loire", "Basse-Normandie", "Pays de la Loire") ~ "Pays de la Loire",
+    nom_région == "Provence-Alpes-Côte d'Azur" ~ "Provence-Alpes-Côte d'Azur",
+    TRUE ~ nom_région
+  )) 
+
+
+
+pop_region <- population_region %>%
+  group_by(nom_région) %>%
+  summarise(total_population = sum(NB, na.rm = TRUE))
+
+
+# Treemap interactive avec dégradé de rouge
+fig <- plot_ly(
+  data = pop_region,
+  type = "treemap",
+  labels = ~nom_région,
+  parents = NA,
+  values = ~total_population,
+  textinfo = "label+value",
+  marker = list(
+    colors = ~total_population,
+    colorscale = "Reds",
+    showscale = TRUE,
+    colorbar = list(title = "Population"),
+    cmin = min(pop_region$total_population),
+    cmax = max(pop_region$total_population)
+  )
+)
+
+fig
+
+```
+
+
+### Analyse de la visualisation : 
+
+L’Île-de-France arrive largement en tête en termes de population. Cela s’explique principalement par la présence de Paris, capitale politique, économique et culturelle du pays, qui concentre une grande part des infrastructures, des services, des emplois et des établissements d’enseignement supérieur. Cette attractivité fait de la région un pôle majeur de peuplement, renforcé par une forte densité urbaine.
+
+La Nouvelle-Aquitaine et l’Auvergne-Rhône-Alpes suivent, avec des populations également élevées. La Nouvelle-Aquitaine est la plus vaste région de France, combinant de grandes agglomérations comme Bordeaux à des zones rurales attractives. Son cadre de vie agréable, ses activités agricoles, industrielles et touristiques y attirent de nombreux habitants.
+L’Auvergne-Rhône-Alpes, quant à elle, bénéficie du dynamisme de villes comme Lyon, Grenoble ou Clermont-Ferrand, et d’une situation géographique favorable, entre montagnes et vallées, propice à une diversité d’activités économiques.
+
+En revanche, les DOM-TOM occupent les dernières places en matière de population. Cela s’explique par leur éloignement géographique, leur superficie plus réduite, ainsi que leur densité généralement plus faible. Malgré leur richesse culturelle et naturelle, leur développement économique et démographique reste limité en comparaison des grandes régions métropolitaines.
+
+
+## Question 10 : Comment sont réparties les TPE, PME et Grandes entreprises (GE) dans chaque région de la France ?
+
+L’objectif de cette question est de comparer le nombre de PME, TPE et Grandes Entreprises (GE) présentes dans chaque région de France. Nous avons choisi de représenter ces données à l’aide de trois diagrammes en barres distincts. Ces graphiques ont été réalisés avec Shiny, en intégrant un filtre permettant de sélectionner chacune des trois catégories d’entreprises.
+
+### Visualisation
+
+```{r  echo = FALSE, fig.align='center', message=FALSE, warning=FALSE, out.width='70%', paged.print=FALSE}
+knitr::include_graphics("C:/Users/estel/Pictures/Screenshots/Capture d'écran 2025-06-21 160850.png")
+```
+
+
+### Analyse de la visualisation
+
+Quelle que soit la catégorie d’entreprise (TPE, PME ou Grandes Entreprises), l’Île-de-France arrive systématiquement en tête. Cela s’explique notamment par le fait que cette région concentre une grande part de l’activité économique française, abrite le siège de nombreuses grandes sociétés, et bénéficie d’une forte densité de population ainsi que d’infrastructures développées. Ces facteurs attirent naturellement un nombre plus important d’entreprises de toutes tailles, renforçant ainsi sa position dominante dans le paysage économique national.
+
+
+
+## Question 11 : Existe-t-il des disparités régionales dans les modes de cohabitation en France ?
+
+Nous avons supposé que **les structures familiales et sociales varient fortement d'une région à une autre** car certaines caractéristiques locales influencent directement les modes de vie.
+
+Par exemple, en **Île-de-France**, les logements sont souvent petits et très chers, ce qui peut pousser plus de gens à vivre seuls ou à partager un appartement en colocation — notamment les étudiants ou les jeunes actifs venus travailler dans la capitale.
+
+À l'inverse, dans des régions comme **la Bretagne ou l'Auvergne**, où la vie est moins chère et les logements plus grands, on peut plus facilement vivre en couple avec des enfants.
+
+De même, dans **les départements d'outre-mer**, les conditions économiques plus précaires peuvent expliquer une part plus importante de familles monoparentales ou d'adultes seuls avec enfants.
+
+C'est donc en tenant compte de ces **différences de contexte** que nous avons formulé cette hypothèse.
+
+### Visualisation
+
+Ce graphique est un **histogramme empilé horizontal** représentant la répartition en pourcentage des différents types de cohabitation *(famille biparentale, monoparentale, personne seule, colocation…)* dans chaque région française, selon **l'ancienne carte administrative à 22 régions** (en vigueur en 2013, date des données).
+
+Cette visualisation permet de **comparer facilement les profils sociaux entre les régions**, et met en lumière certaines spécificités territoriales.
+
+Ce graphique est également intégré dans notre **application Shiny**, ce qui permet à l'utilisateur d'interagir avec les données dans une interface dynamique.
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(tidyr)
+library(scales)
+
+# Importation des fichiers
+population <- read.csv("C:/Users/estel/Downloads/archive/population.csv")
+geo <- read.csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+
+# Préparation des identifiants
+population <- population %>%
+  mutate(CODGEO = as.character(CODGEO)) %>%
+  mutate(CODGEO = if_else(nchar(CODGEO) == 4, paste0("0", CODGEO), CODGEO))
+
+geo <- geo %>%
+  mutate(code_insee = as.character(code_insee)) %>%
+  mutate(code_insee = if_else(nchar(code_insee) == 4, paste0("0", code_insee), code_insee))
+
+# Jointure et suppression des NA
+pop_region <- population %>%
+  left_join(geo, by = c("CODGEO" = "code_insee")) %>%
+  filter(!is.na(nom_région))
+
+# Agrégation des données
+cohab_region <- pop_region %>%
+  group_by(nom_région, MOCO) %>%
+  summarise(total = sum(NB, na.rm = TRUE)) %>%
+  ungroup()
+
+# Recodage des types de cohabitation
+cohab_region <- cohab_region %>%
+  mutate(
+    type_cohabitation = case_when(
+      MOCO == 11 ~ "Enfant avec 2 parents",
+      MOCO == 12 ~ "Enfant avec 1 parent",
+      MOCO == 21 ~ "Couple sans enfant",
+      MOCO == 22 ~ "Couple avec enfant(s)",
+      MOCO == 23 ~ "Adulte seul avec enfant(s)",
+      MOCO == 31 ~ "Colocation",
+      MOCO == 32 ~ "Personne seule",
+      TRUE ~ "Autre"
+    )
+  )
+
+# Passage en proportions
+cohab_prop <- cohab_region %>%
+  group_by(nom_région) %>%
+  mutate(pct = total / sum(total)) %>%
+  ungroup()
+
+# Création du graphique
+ggplot(cohab_prop, aes(x = reorder(nom_région, -pct), y = pct, fill = type_cohabitation)) +
+  geom_bar(stat = "identity", position = "fill") +
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  scale_fill_brewer(palette = "Set2") +
+  coord_flip() +
+  labs(
+    title = "Répartition des modes de cohabitation par région (2013)",
+    subtitle = "En pourcentage de la population de chaque région",
+    x = "Région",
+    y = "Part relative des types de cohabitation",
+    fill = "Type de cohabitation",
+    caption = "Source : INSEE – données 2013"
+  ) +
+  theme_minimal()
+```
+
+### Analyse
+
+On observe plusieurs **faits saillants** :
+
+- **Île-de-France** — Se démarque par une part importante de personnes seules et de colocations, ce qui peut être lié au coût du logement élevé, à la population étudiante ou à la forte mobilité professionnelle.
+
+-  **Régions d'outre-mer** *(Guyane, Martinique, Réunion)* — Affichent une proportion plus importante d'adultes seuls avec enfants ou d'enfants avec un seul parent, traduisant des structures familiales différentes ou des situations sociales plus précaires.
+
+- **Régions rurales** *(Alsace, Auvergne, Bretagne)* — À l'inverse, la cohabitation dominante reste les couples avec enfants, illustrant des modèles familiaux plus "classiques" ou stables.
+
+- **Régions vieillissantes** *(Bourgogne, Lorraine)* — Certaines régions ont une forte part de personnes seules, ce qui pourrait refléter un vieillissement démographique ou un exode des jeunes.
+
+Ce graphique **confirme notre hypothèse** : les modes de vie varient fortement selon les régions françaises, et constituent une **dimension importante** dans l'analyse des inégalités sociales et territoriales. 
+
+Cela renforce l'idée que **les politiques publiques doivent être adaptées aux spécificités régionales**.
+
+
+## Question 12 : La proximité avec Paris influence-t-elle le salaire horaire moyen ?
+
+Nous faisons l’hypothèse que les communes proches de Paris bénéficient d’un tissu économique plus dense, de meilleures opportunités d’emploi et d’un niveau de vie plus élevé, ce qui se traduirait par des salaires horaires moyens plus importants.
+
+### Visualisation
+
+Ce graphique est un histogramme simple comparant le salaire horaire moyen dans deux groupes de communes : celles situées à moins de 30 km de Paris, et celles situées au-delà.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(geosphere)
+library(readr)
+
+# Chargement des données
+salaires <- read_csv("C:/Users/estel/Downloads/archive/net_salary_per_town_categories.csv")
+localisation <- read_csv("C:/Users/estel/Downloads/archive/name_geographic_information.csv")
+
+# Préparation des identifiants
+localisation <- localisation %>%
+  mutate(
+    code_insee = as.character(code_insee),
+    code_insee = if_else(nchar(code_insee) == 4, paste0("0", code_insee), code_insee),
+    longitude = as.numeric(longitude),
+    latitude = as.numeric(latitude)
+  )
+
+# Jointure des jeux de données
+df <- left_join(salaires, localisation, by = c("CODGEO" = "code_insee"))
+
+# Coordonnées de Paris
+paris_coords <- c(2.3522, 48.8566)
+
+# 📏 Calcul de la distance (km) pour chaque commune
+df <- df %>%
+  filter(!is.na(longitude) & !is.na(latitude)) %>%
+  rowwise() %>%
+  mutate(
+    distance_paris = distHaversine(c(longitude, latitude), paris_coords) / 1000
+  ) %>%
+  ungroup() %>%
+  mutate(
+    categorie_distance = ifelse(distance_paris <= 30, "Proche (<30 km)", "Éloignée (>30 km)")
+  )
+
+# Moyenne des salaires par distance
+resultats <- df %>%
+  group_by(categorie_distance) %>%
+  summarise(Salaire_Moyen = mean(SNHM14, na.rm = TRUE))
+
+# Graphique final
+ggplot(resultats, aes(x = categorie_distance, y = Salaire_Moyen, fill = categorie_distance)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  geom_text(aes(label = round(Salaire_Moyen, 2)), vjust = -0.5, size = 4.5, fontface = "bold") +
+  labs(
+    title = "Salaire horaire moyen selon la distance à Paris",
+    x = "Distance par rapport à Paris",
+    y = "Salaire moyen (€ / heure)",
+    caption = "Source : INSEE, données 2013"
+  ) +
+  scale_fill_manual(values = c("#4E79A7", "#F28E2B")) +
+  theme_minimal()
+```
+
+### Analyse
+
+On observe une différence nette entre les deux catégories :
+
+- Les communes situées à moins de 30 km de Paris affichent un salaire moyen de 18,27 €/h, soit près de 5 euros de plus que celles situées à plus de 30 km (13,41 €/h).
+
+- Cette différence peut s’expliquer par la concentration des emplois qualifiés, des grandes entreprises et des institutions à Paris et en proche banlieue, ainsi que par un coût de la vie plus élevé qui se répercute sur les rémunérations.
+
+- À l'inverse, les zones éloignées sont souvent plus rurales ou désindustrialisées, avec un tissu économique moins dense et des salaires plus faibles.
+
+Ce graphique met en évidence une inégalité spatiale forte en termes de rémunération, confirmant que la proximité avec Paris constitue un avantage économique significatif. Cela pose la question de l’aménagement du territoire et de l’**équité dans l’accès à l’emploi et à des conditions de travail rémunératrices sur tout le territoire national.
+
+
+
+## Graphiques réalisés avec POWER BI
+
+Certains de nos graphiques réalisés sont également disponibles sur notre dashboard Power BI à cette adresse : [Dashboard Power BI](https://uttroyes-my.sharepoint.com/:u:/g/personal/dora_chelsy_nguemo_kamwoua_utt_fr/Eb1M-dNu7RBAhrmVsqDS1PUB-IvC1Dy55zTN5JCrj7gGWA)
+
+
+Power BI est un outil puissant et intuitif qui permet de créer des visualisations interactives et dynamiques, facilitant ainsi l’exploration approfondie des données. Grâce à ses capacités d’interactivité, les utilisateurs peuvent filtrer et explorer les données en temps réel, rendant l’analyse plus riche et personnalisée. Il offre une intégration aisée avec diverses sources de données, ce qui simplifie la mise à jour automatique des rapports. Le partage sécurisé via le cloud facilite la collaboration, tandis que ses visualisations professionnelles améliorent la compréhension et la lisibilité des résultats. Ainsi, Power BI complète parfaitement notre travail en R en apportant une dimension interactive et collaborative à notre analyse.
+
+Aperçu des graphiques : 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+knitr::include_graphics("C:/Users/estel/Pictures/Screenshots/Capture d'écran 2025-06-21 171322.png")
+```
+
+
+# Conclusion
+
+out au long de ce projet, nous avons pu analyser différentes données liées à la population, aux entreprises et aux salaires en France. Ce qui ressort de manière assez claire, c’est que les inégalités que l’on constatait déjà en 2013 sont encore très visibles en 2025. Les grandes régions comme l’Île-de-France, la Nouvelle-Aquitaine ou l’Auvergne-Rhône-Alpes dominent toujours, que ce soit en termes de population ou de développement économique. À l’inverse, certaines zones, comme les DOM-TOM, restent à la traîne.
+
+Nous avons aussi observé que les écarts de salaires entre les hommes et les femmes sont encore bien présents, même quand ils occupent les mêmes types de postes. C’est un constat qui montre que les choses évoluent lentement, malgré les efforts faits au fil des années.
+
+Ce projet nous a permis de mieux comprendre les réalités sociales et économiques du territoire français. Nous avons appris à manipuler des fichiers complexes, à travailler ensemble efficacement et à présenter des résultats clairs et compréhensibles. C’était un vrai travail d’équipe qui nous a demandé de la rigueur, mais aussi beaucoup de curiosité.
+
+Enfin, ce projet nous a donné envie de continuer à explorer ce type de sujet, car il nous montre à quel point les chiffres peuvent révéler beaucoup sur la société dans laquelle on vit.
+
+# Annexe : organisation du travail
+
+**Estelle Patricia NOTOUM TAMKO** : questions 2, 5, 6, 7, 8, 9 et 10  
+**Dora NGUEMO KAMWOUA** : question 3 (les deux cartes) et visualisations sur Power BI  
+**Patrice MBANGUE** : questions 1, 11, 12  
+**Samella LEUKOUO** : question 4
+
