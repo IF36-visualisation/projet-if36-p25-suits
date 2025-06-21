@@ -3,6 +3,7 @@ library(plotly)
 library(dplyr)
 library(tidyverse)
 library(sf)
+library(geosphere)
 
 # Chargement de données
 geography <- read_csv("C:/Users/HP/Documents/IF36/name_geographic_information.csv")
@@ -257,6 +258,46 @@ server <- function(input, output, session) {
       theme(plot.title = element_text(face = "bold"))
   })
 
+   # --------------------------------------------------------------------------------
+  output$salaireDistancePlot <- renderPlotly({
+    
+    geography <- geography %>%
+      mutate(
+        code_insee = as.character(code_insee),
+        code_insee = if_else(nchar(code_insee) == 4, paste0("0", code_insee), code_insee),
+        longitude = as.numeric(longitude),
+        latitude = as.numeric(latitude)
+      )
+    
+    df <- left_join(data_salaire, geography, by = c("CODGEO" = "code_insee"))
+    
+    paris_coords <- c(2.3522, 48.8566)
+    
+    df <- df %>%
+      filter(!is.na(longitude) & !is.na(latitude)) %>%
+      rowwise() %>%
+      mutate(distance_paris = distHaversine(c(longitude, latitude), paris_coords) / 1000) %>%
+      ungroup() %>%
+      mutate(categorie_distance = ifelse(distance_paris <= 30, "Proche (<30 km)", "Éloignée (>30 km)"))
+    
+    resultats <- df %>%
+      group_by(categorie_distance) %>%
+      summarise(Salaire_Moyen = mean(SNHM14, na.rm = TRUE))
+    
+    graph <- ggplot(resultats, aes(x = categorie_distance, y = Salaire_Moyen, fill = categorie_distance)) +
+      geom_bar(stat = "identity", width = 0.5) +
+      geom_text(aes(label = round(Salaire_Moyen, 2)), vjust = -0.5, size = 4.5, fontface = "bold") +
+      labs(
+        title = "Salaire horaire moyen selon la distance à Paris",
+        x = "Distance par rapport à Paris",
+        y = "Salaire moyen (€ / heure)",
+        caption = "Source : INSEE, données 2013"
+      ) +
+      scale_fill_manual(values = c("#4E79A7", "#F28E2B")) +
+      theme_minimal()
+    
+    ggplotly(graph)
+  })
   
   
 }
